@@ -1,6 +1,6 @@
 name: thesis-compneuro
 dependencies:
-  - python=3.9
+  - python=3.11.9
   - requests
   - numpy
   - scipy
