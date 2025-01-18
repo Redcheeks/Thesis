@@ -20,7 +20,7 @@ def run_LIF(pars, Iinj, stop=False):
     V_th, V_reset = pars["V_th"], pars["V_reset"]
     tau_m, g_L = pars["tau_m"], pars["g_L"]
     V_init, E_L = pars["V_init"], pars["E_L"]
-    dt, range_t = pars["dt"], pars["range_t"]
+    dt, range_t = sim_params["dt"], pars["range_t"]
     Lt = range_t.size
     tref = pars["tref"]
 
@@ -61,3 +61,112 @@ def run_LIF(pars, Iinj, stop=False):
     rec_spikes = np.array(rec_spikes) * dt
 
     return v, rec_spikes
+
+
+def default_pars(**kwargs):  # FROM NEURONMATCH
+    pars = {}
+
+    # typical neuron parameters#
+    pars["V_th"] = -55.0  # spike threshold [mV]
+    pars["V_reset"] = -75.0  # reset potential [mV]
+    pars["tau_m"] = 10.0  # membrane time constant [ms]
+    pars["g_L"] = 10.0  # leak conductance [nS]
+    pars["V_init"] = -75.0  # initial potential [mV]
+    pars["E_L"] = -75.0  # leak reversal potential [mV]
+    pars["tref"] = 2.0  # refractory time (ms)
+
+    # simulation parameters #
+    pars["T"] = 400.0  # Total duration of simulation [ms]
+    pars["dt"] = 0.1  # Simulation time step [ms]
+
+    # external parameters if any #
+    for k in kwargs:
+        pars[k] = kwargs[k]
+
+    pars["range_t"] = np.arange(
+        0, pars["T"], pars["dt"]
+    )  # Vector of discretized time points [ms]
+
+    return pars
+
+
+def caillet_random_pars(num_neurons=300):  # Randomly sample parameters for 300 neurons
+    # Define the mean and standard deviation for the soma diameter (FIND REAL VALUES!!)
+    soma_diameter_mean = 50  # in micrometers
+    soma_diameter_std = 5  # in micrometers
+
+    # Generate random soma diameters for each neuron
+    soma_diameters = np.random.normal(
+        soma_diameter_mean, soma_diameter_std, num_neurons
+    )
+
+    # Simulation parameters (same for all neurons)
+    T = 400.0  # Total duration of simulation [ms]
+    dt = 0.1  # Simulation time step [ms]
+
+    # Define the refractory period (assumed to be 2 ms for all neurons)
+    refractory_time_ms = 2  # in ms
+
+    # Create a list to store parameters for each neuron
+    neuron_list = []
+
+    for i in range(num_neurons):
+        D_soma = soma_diameters[i]  # Soma diameter in micrometers
+
+        # Calculate dependent parameters using empirical relationships
+        R = 9.6e5 * (D_soma**-2.4)  # Input resistance [MΩ]
+        C = 1.2 * D_soma  # Membrane capacitance [nF]
+        tau = 2.6e4 * (D_soma**-1.5)  # Membrane time constant [ms]
+        I_th = 9.0e-4 * (D_soma**2.5)  # Rheobase current [nA]
+        AHP = 2.5e4 * (D_soma**-1.5)  # Afterhyperpolarization duration [ms]
+        ACV = 4.0 * (D_soma**0.7)  # Axonal conduction velocity [m/s]
+
+        # Calculate leak conductance (g_L = C / tau)
+        g_L = C / tau  # in μS (since C is in nF and tau is in ms)
+
+        # Set other parameters
+        V_rest = -65  # Resting potential in mV
+        V_th = -50  # Threshold potential in mV
+        V_reset = -70  # Reset potential in mV
+        V_init = V_rest  # Initial potential in mV
+
+        # Store parameters for the neuron
+        neuron_list.append(
+            {
+                "soma_diameter": D_soma,
+                "R": R,  # Input resistance [MΩ]
+                "C": C,  # Membrane capacitance [nF]
+                "tau": tau,  # Membrane time constant [ms]
+                "I_th": I_th,  # Rheobase current [nA]
+                "AHP": AHP,  # Afterhyperpolarization duration [ms]
+                "ACV": ACV,  # Axonal conduction velocity [m/s]
+                "g_L": g_L,  # Leak conductance [μS]
+                "V_rest": V_rest,  # Resting potential [mV]
+                "V_th": V_th,  # Threshold potential [mV]
+                "V_reset": V_reset,  # Reset potential [mV]
+                "V_init": V_init,  # Initial potential [mV]
+                "refractory_time": refractory_time_ms,  # Refractory period [ms]
+                "T": T,  # Total duration of simulation [ms]
+                "dt": dt,  # Simulation time step [ms]
+                "range_t": np.arange(
+                    0, T, dt
+                ),  # Vector of discretized time points [ms]
+            }
+        )
+
+    # Sort the neurons by soma diameter in ascending order
+    neuron_list.sort(key=lambda x: x["soma_diameter"])
+
+    # Convert the sorted list to a dictionary for compatibility
+    pars = {i: neuron_list[i] for i in range(num_neurons)}
+
+    return pars
+
+
+def _main():
+    pars = default_pars()  # Use caillet parameters here
+    v, sp = run_LIF(pars, Iinj=100, stop=True)
+
+
+if __name__ == "__main__":
+    _main()
