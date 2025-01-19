@@ -163,6 +163,84 @@ def caillet_random_pars(num_neurons=300):  # Randomly sample parameters for 300 
     return pars
 
 
+def caillet_quadratic(
+    num_neurons=300,
+):  # Sample parameters for 300 neurons using quadratic formula
+
+    # Generate normalized indices
+    i_values = np.linspace(0, 1, num_neurons)
+
+    soma_Dmin = 50  # minimum soma diameter in micro meter
+    soma_Dmax = 100  # maximum soma diameter in micro meter
+
+    # Calculate soma diameters using a quadratic relationship
+    soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
+
+    # Simulation parameters (same for all neurons)
+    T = 400.0  # Total duration of simulation [ms]
+    dt = 0.1  # Simulation time step [ms]
+
+    # Define the refractory period (assumed to be 2 ms for all neurons)
+    refractory_time_ms = 2  # in ms
+
+    # Create a list to store parameters for each neuron
+    neuron_list = []
+
+    for i in range(num_neurons):
+        D_soma = soma_diameters[i]  # Soma diameter in micrometers
+
+        # Calculate dependent parameters using empirical relationships
+        I_th = 3.85e-9 * 9.1 ** ((i / num_neurons) ** 1.831)  # Rheobase current [A]
+        S = 3.96e-4 * I_th**0.396  # (Neuron surface area) in square meters [m^2]
+        R = 1.68e-10 * S**-2.43  # Input resistance [Ω]
+        C = 7.9e-5 * D_soma  # Membrane capacitance [F]
+        tau = 7.9e-5 * D_soma * R  # Membrane time constant [s]
+        t_ref = 0.2 * 2.7e-8 * D_soma**-1.51  # (Refractory time) in [s]
+
+        # adjust units
+        I_th = I_th * 1e9  # Rheobase current [nA]
+        R = R * 1e-6  # Input resistance [MΩ]
+        C = C * 1e9  # Membrane capacitance [nF]
+        tau = tau * 1e3  # Membrane time constant [ms]
+        t_ref = t_ref * 1e3  # (Refractory time) in [ms]
+
+        # Calculate leak conductance (g_L = C / tau)
+        g_L = C / tau  # in μS (since C is in nF and tau is in ms)
+
+        # Set other parameters
+        V_rest = -65  # Resting potential in mV
+        V_th = -50  # Threshold potential in mV
+        V_reset = -70  # Reset potential in mV
+        V_init = V_rest  # Initial potential in mV
+
+        # Store parameters for the neuron
+        neuron_list.append(
+            {
+                "D_soma": D_soma,
+                "R": R,  # Input resistance [MΩ]
+                "C": C,  # Membrane capacitance [nF]
+                "tau": tau,  # Membrane time constant [ms]
+                "I_th": I_th,  # Rheobase current [nA]
+                "g_L": g_L,  # Leak conductance [μS]
+                "V_rest": V_rest,  # Resting potential [mV]
+                "V_th": V_th,  # Threshold potential [mV]
+                "V_reset": V_reset,  # Reset potential [mV]
+                "V_init": V_init,  # Initial potential [mV]
+                "t_ref": t_ref,  # Refractory period [ms]
+                "T": T,  # Total duration of simulation [ms]
+                "dt": dt,  # Simulation time step [ms]
+                "range_t": np.arange(
+                    0, T, dt
+                ),  # Vector of discretized time points [ms]
+            }
+        )
+
+    # Convert the sorted list to a dictionary for compatibility
+    pars = {i: neuron_list[i] for i in range(num_neurons)}
+
+    return pars
+
+
 def _main():
     pars = default_pars()  # Use caillet parameters here
     v, sp = run_LIF(pars, Iinj=100, stop=True)
