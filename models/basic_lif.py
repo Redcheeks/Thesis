@@ -214,6 +214,7 @@ def caillet_quadratic(
         V_th = -50  # Threshold potential in mV
         V_reset = -70  # Reset potential in mV
         V_init = V_rest  # Initial potential in mV
+        E_L = -75.0  # leak reversal potential in mV
 
         # Store parameters for the neuron
         neuron_list.append(
@@ -228,7 +229,8 @@ def caillet_quadratic(
                 "V_th": V_th,  # Threshold potential [mV]
                 "V_reset": V_reset,  # Reset potential [mV]
                 "V_init": V_init,  # Initial potential [mV]
-                "t_ref": t_ref,  # Refractory period [ms]
+                "E_L": E_L,  # leak reversal potential [mV]
+                "tref": t_ref,  # Refractory period [ms]
                 "T": T,  # Total duration of simulation [ms]
                 "dt": dt,  # Simulation time step [ms]
                 "range_t": np.arange(
@@ -294,7 +296,7 @@ def my_hists(isi1, isi2, cv1, cv2, sigma1, sigma2):
     plt.show()
 
 
-def diff_DC(pars, I_dc=200.0, tau_m=10.0):
+def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     # Run the LIF model to get initial voltage and spikes
     pars["tau_m"] = tau_m
 
@@ -321,7 +323,7 @@ def diff_DC(pars, I_dc=200.0, tau_m=10.0):
     # Create a horizontal slider to control I_dc
     ax_Idc = fig.add_axes([0.25, 0.1, 0.65, 0.03], facecolor="lightgoldenrodyellow")
     Idc_slider = Slider(
-        ax=ax_Idc, label="I_dc", valmin=0, valmax=300, valinit=I_dc, valstep=10
+        ax=ax_Idc, label="I_dc", valmin=0, valmax=10, valinit=I_dc, valstep=1
     )
     # Create a second horizontal slider to control tau_m
     ax_tau = fig.add_axes([0.25, 0.05, 0.65, 0.03], facecolor="lightgoldenrodyellow")
@@ -348,8 +350,8 @@ def diff_DC(pars, I_dc=200.0, tau_m=10.0):
 
 def _main():
 
-    pars = default_pars(T=500)  # Get parameters
-    diff_DC(pars)
+    pars = caillet_quadratic()  # Get parameters
+    diff_DC(pars[1])
     plt.show()
 
 
