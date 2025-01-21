@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 
 
 def run_LIF(pars, Iinj, stop=False):
@@ -20,7 +22,7 @@ def run_LIF(pars, Iinj, stop=False):
     V_th, V_reset = pars["V_th"], pars["V_reset"]
     tau_m, g_L = pars["tau_m"], pars["g_L"]
     V_init, E_L = pars["V_init"], pars["E_L"]
-    dt, range_t = sim_params["dt"], pars["range_t"]
+    dt, range_t = pars["dt"], pars["range_t"]
     Lt = range_t.size
     tref = pars["tref"]
 
@@ -241,9 +243,117 @@ def caillet_quadratic(
     return pars
 
 
+# Code for plotting
+def plot_GWN(pars, I_GWN):
+    """
+    Args:
+      pars  : parameter dictionary
+      I_GWN : Gaussian white noise input
+
+    Returns:
+      figure of the gaussian white noise input
+    """
+
+    plt.figure(figsize=(12, 4))
+    plt.subplot(121)
+    plt.plot(pars["range_t"][::3], I_GWN[::3], "b")
+    plt.xlabel("Time (ms)")
+    plt.ylabel(r"$I_{GWN}$ (pA)")
+    plt.subplot(122)
+    plot_volt_trace(pars, v, sp)
+    plt.tight_layout()
+    plt.show()
+
+
+def my_hists(isi1, isi2, cv1, cv2, sigma1, sigma2):
+    """
+    Args:
+      isi1 : vector with inter-spike intervals
+      isi2 : vector with inter-spike intervals
+      cv1  : coefficient of variation for isi1
+      cv2  : coefficient of variation for isi2
+
+    Returns:
+      figure with two histograms, isi1, isi2
+
+    """
+    plt.figure(figsize=(11, 4))
+    my_bins = np.linspace(10, 30, 20)
+    plt.subplot(121)
+    plt.hist(isi1, bins=my_bins, color="b", alpha=0.5)
+    plt.xlabel("ISI (ms)")
+    plt.ylabel("count")
+    plt.title(r"$\sigma_{GWN}=$%.1f, CV$_{\mathrm{isi}}$=%.3f" % (sigma1, cv1))
+
+    plt.subplot(122)
+    plt.hist(isi2, bins=my_bins, color="b", alpha=0.5)
+    plt.xlabel("ISI (ms)")
+    plt.ylabel("count")
+    plt.title(r"$\sigma_{GWN}=$%.1f, CV$_{\mathrm{isi}}$=%.3f" % (sigma2, cv2))
+    plt.tight_layout()
+    plt.show()
+
+
+def diff_DC(pars, I_dc=200.0, tau_m=10.0):
+    # Run the LIF model to get initial voltage and spikes
+    pars["tau_m"] = tau_m
+
+    v, sp = run_LIF(pars, Iinj=I_dc, stop=True)
+    V_th = pars["V_th"]
+    dt, range_t = pars["dt"], pars["range_t"]
+    if sp.size:
+        sp_num = (sp / dt).astype(int) - 1
+        v[sp_num] += 20  # draw nicer spikes
+
+    # Plot the initial voltage trace
+    fig, ax = plt.subplots()
+    (line,) = ax.plot(pars["range_t"], v, "b")
+    ax.axhline(pars["V_th"], color="k", ls="--")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("V (mV)")
+    ax.legend(["Membrane\npotential", r"Threshold V$_{\mathrm{th}}$"])
+    ax.set_ylim([-80, -40])
+    ax.set_title("Voltage Response for DC current")
+
+    # Adjust the main plot to make room for the slider
+    fig.subplots_adjust(left=0.25, bottom=0.25)
+
+    # Create a horizontal slider to control I_dc
+    ax_Idc = fig.add_axes([0.25, 0.1, 0.65, 0.03], facecolor="lightgoldenrodyellow")
+    Idc_slider = Slider(
+        ax=ax_Idc, label="I_dc", valmin=0, valmax=300, valinit=I_dc, valstep=10
+    )
+    # Create a second horizontal slider to control tau_m
+    ax_tau = fig.add_axes([0.25, 0.05, 0.65, 0.03], facecolor="lightgoldenrodyellow")
+    tau_slider = Slider(
+        ax=ax_tau, label="tau_m ", valmin=2, valmax=20, valinit=tau_m, valstep=2
+    )
+
+    # Update function to be called when the slider's value changes
+    def update(val):
+        new_I_dc = Idc_slider.val
+        pars["tau_m"] = tau_slider.val
+        v, sp = run_LIF(pars, Iinj=new_I_dc, stop=True)
+        # Update spikes visualization
+        if sp.size:
+            sp_num = (sp / dt).astype(int) - 1
+            v[sp_num] += 20
+        line.set_ydata(v)
+        fig.canvas.draw_idle()
+
+    # Register the update function with the slider
+    Idc_slider.on_changed(update)
+    tau_slider.on_changed(update)
+
+
 def _main():
-    pars = default_pars()  # Use caillet parameters here
-    v, sp = run_LIF(pars, Iinj=100, stop=True)
+
+    pars = default_pars(T=500)  # Get parameters
+    diff_DC(pars)
+    plt.show()
+
+
+# I_dc=(0, 300, 50), tau_m=(2, 20, 10)
 
 
 if __name__ == "__main__":
