@@ -22,6 +22,7 @@ def run_LIF(pars, Iinj, stop=False):
     V_th, V_reset = pars["V_th"], pars["V_reset"]
     tau_m, g_L = pars["tau_m"], pars["g_L"]
     V_init, E_L = pars["V_init"], pars["E_L"]
+    R_m = pars["R"]
     dt, range_t = pars["dt"], pars["range_t"]
     Lt = range_t.size
     tref = pars["tref"]
@@ -54,13 +55,14 @@ def run_LIF(pars, Iinj, stop=False):
             tr = tref / dt  # set refractory time
 
         # Calculate the increment of the membrane potential
-        dv = (-(v[it] - E_L) + (Iinj[it] / g_L)) * (dt / tau_m)
+        dv = (-(v[it] - E_L) + (Iinj[it] * R_m)) * (dt / tau_m)
 
         # Update the membrane potential
         v[it + 1] = v[it] + dv
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * dt
+    # print(rec_spikes)
 
     return v, rec_spikes
 
@@ -80,7 +82,6 @@ def default_pars(**kwargs):  # FROM NEURONMATCH
     # simulation parameters #
     pars["T"] = 400.0  # Total duration of simulation [ms]
     pars["dt"] = 0.1  # Simulation time step [ms]
-
     # external parameters if any #
     for k in kwargs:
         pars[k] = kwargs[k]
@@ -135,10 +136,11 @@ def caillet_random_pars(num_neurons=300):  # Randomly sample parameters for 300 
         # Store parameters for the neuron
         neuron_list.append(
             {
+                "number": i,
                 "soma_diameter": D_soma,
                 "R": R,  # Input resistance [MΩ]
                 "C": C,  # Membrane capacitance [nF]
-                "tau": tau,  # Membrane time constant [ms]
+                "tau_m": tau,  # Membrane time constant [ms]
                 "I_th": I_th,  # Rheobase current [nA]
                 "AHP": AHP,  # Afterhyperpolarization duration [ms]
                 "ACV": ACV,  # Axonal conduction velocity [m/s]
@@ -165,15 +167,14 @@ def caillet_random_pars(num_neurons=300):  # Randomly sample parameters for 300 
     return pars
 
 
-def caillet_quadratic(
-    num_neurons=300,
-):  # Sample parameters for 300 neurons using quadratic formula
+# Sample parameters for 300 neurons using quadratic formula
+def caillet_quadratic(num_neurons=300):
 
     # Generate normalized indices
     i_values = np.linspace(0, 1, num_neurons)
 
-    soma_Dmin = 50  # minimum soma diameter in micro meter
-    soma_Dmax = 100  # maximum soma diameter in micro meter
+    soma_Dmin = 50e-6  # minimum soma diameter in micro meter
+    soma_Dmax = 100e-6  # maximum soma diameter in micro meter
 
     # Calculate soma diameters using a quadratic relationship
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
@@ -189,15 +190,15 @@ def caillet_quadratic(
     neuron_list = []
 
     for i in range(num_neurons):
-        D_soma = soma_diameters[i]  # Soma diameter in micrometers
+        D_soma = soma_diameters[i]  # Soma diameter in meters
 
         # Calculate dependent parameters using empirical relationships
-        I_th = 3.85e-9 * 9.1 ** ((i / num_neurons) ** 1.831)  # Rheobase current [A]
-        S = 3.96e-4 * I_th**0.396  # (Neuron surface area) in square meters [m^2]
-        R = 1.68e-10 * S**-2.43  # Input resistance [Ω]
+        I_th = 3.85e-9 * (9.1 ** ((i / num_neurons) ** 1.831))  # Rheobase current [A]
+        S = 3.96e-4 * (I_th**0.396)  # (Neuron surface area) in square meters [m^2]
+        R = 1.68e-10 * (S**-2.43)  # Input resistance [Ω]
         C = 7.9e-5 * D_soma  # Membrane capacitance [F]
         tau = 7.9e-5 * D_soma * R  # Membrane time constant [s]
-        t_ref = 0.2 * 2.7e-8 * D_soma**-1.51  # (Refractory time) in [s]
+        t_ref = 0.2 * 2.7e-8 * (D_soma**-1.51)  # (Refractory time) in [s]
 
         # adjust units
         I_th = I_th * 1e9  # Rheobase current [nA]
@@ -205,6 +206,7 @@ def caillet_quadratic(
         C = C * 1e9  # Membrane capacitance [nF]
         tau = tau * 1e3  # Membrane time constant [ms]
         t_ref = t_ref * 1e3  # (Refractory time) in [ms]
+        D_soma = D_soma * 1e6  # Soma diameter in MICROmeters
 
         # Calculate leak conductance (g_L = C / tau)
         g_L = C / tau  # in μS (since C is in nF and tau is in ms)
@@ -219,10 +221,11 @@ def caillet_quadratic(
         # Store parameters for the neuron
         neuron_list.append(
             {
+                "number": i,
                 "D_soma": D_soma,
                 "R": R,  # Input resistance [MΩ]
                 "C": C,  # Membrane capacitance [nF]
-                "tau": tau,  # Membrane time constant [ms]
+                "tau_m": tau,  # Membrane time constant [ms]
                 "I_th": I_th,  # Rheobase current [nA]
                 "g_L": g_L,  # Leak conductance [μS]
                 "V_rest": V_rest,  # Resting potential [mV]
@@ -323,7 +326,7 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     # Create a horizontal slider to control I_dc
     ax_Idc = fig.add_axes([0.25, 0.1, 0.65, 0.03], facecolor="lightgoldenrodyellow")
     Idc_slider = Slider(
-        ax=ax_Idc, label="I_dc", valmin=0, valmax=10, valinit=I_dc, valstep=1
+        ax=ax_Idc, label="I_dc", valmin=0, valmax=100, valinit=I_dc, valstep=1
     )
     # Create a second horizontal slider to control tau_m
     ax_tau = fig.add_axes([0.25, 0.05, 0.65, 0.03], facecolor="lightgoldenrodyellow")
@@ -348,10 +351,64 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     tau_slider.on_changed(update)
 
 
+def F_I_SingleNeuron(pars, Imin=1, Imax=50, n_samples=50):
+    # calculates and plots F-I curve for a neuron with properties *pars* for current between Imin and Imax
+    I_range = np.linspace(start=Imin, stop=Imax, num=n_samples)
+    print(I_range)
+    freq = []  # record freq for each current level
+
+    for i in I_range:
+
+        v, sp = run_LIF(pars, Iinj=i, stop=True)
+        if sp.size > 0:
+            freq.append(1 / (sp[2] - sp[1]))
+        else:
+            freq.append(0)
+
+    fig, ax = plt.subplots()
+    line = ax.plot(I_range, freq, "b")
+    ax.set_xlabel("Current (nA)")
+    ax.set_ylabel("Frequency (HZ)")
+
+    # ax.set_ylim([-80, -40])
+    ax.set_title("Frequency-Current Plot")
+
+
+def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
+    # calculates and plots F-I curve for a neuron with properties *pars* for current between Imin and Imax
+    I_range = np.linspace(start=Imin, stop=Imax, num=n_samples)
+
+    freq = []  # record freq for each current level
+    fig, ax = plt.subplots()
+    it = 0
+    for pars in pars_list:  # for each of the neurons
+        it += 1
+        for i in I_range:
+
+            v, sp = run_LIF(pars, Iinj=i, stop=True)
+            if sp.size:
+                freq.append(1 / (sp[2] - sp[1]))
+            else:
+                freq.append(0)
+        ax.plot(I_range, freq)
+        freq = []  # reset freq
+
+    ax.set_xlabel("Current (nA)")
+    ax.set_ylabel("Frequency (HZ)")
+
+    # ax.set_ylim([-80, -40])
+    ax.set_title("Frequency-Current Plot")
+
+
 def _main():
 
     pars = caillet_quadratic()  # Get parameters
-    diff_DC(pars[1])
+    print(pars[250]["tau_m"], pars[150]["tau_m"])
+    # diff_DC(pars[250])
+    pars[100]["tau_m"] = 10
+    F_I_SingleNeuron(pars[100])
+    # F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
+    # plt.legend(["10", "50", "150", "250"])
     plt.show()
 
 
