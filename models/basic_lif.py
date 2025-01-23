@@ -55,7 +55,7 @@ def run_LIF(pars, Iinj, stop=False):
             tr = tref / dt  # set refractory time
 
         # Calculate the increment of the membrane potential
-        dv = (-(v[it] - E_L) + (Iinj[it] * R_m)) * (dt / tau_m)
+        dv = (-(v[it] - E_L) + (Iinj[it] / g_L)) * (dt / tau_m)
 
         # Update the membrane potential
         v[it + 1] = v[it] + dv
@@ -386,8 +386,8 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
         for i in I_range:
 
             v, sp = run_LIF(pars, Iinj=i, stop=True)
-            if sp.size:
-                freq.append(1 / (sp[2] - sp[1]))
+            if sp.size > 1:
+                freq.append(1 / (sp[1] - sp[0]))
             else:
                 freq.append(0)
         ax.plot(I_range, freq)
@@ -405,10 +405,10 @@ def _main():
     pars = caillet_quadratic()  # Get parameters
     print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[250])
-    pars[100]["tau_m"] = 10
-    F_I_SingleNeuron(pars[100])
-    # F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
-    # plt.legend(["10", "50", "150", "250"])
+    # pars[100]["tau_m"] = 10
+    # F_I_SingleNeuron(pars[100])
+    F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
+    plt.legend(["10", "50", "150", "250"])
     plt.show()
 
 
