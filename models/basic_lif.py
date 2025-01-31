@@ -94,7 +94,10 @@ def default_pars(**kwargs):  # FROM NEURONMATCH
 
 
 # Sample parameters for 300 neurons using quadratic formula
-def caillet_quadratic(num_neurons=300):
+def caillet_quadratic(T=400.0, dt=0.1, num_neurons=300):
+    # Simulation parameters (same for all neurons)
+    # T- Total duration of simulation [ms]
+    # dt - Simulation time step [ms]
 
     # Generate normalized indices
     i_values = np.linspace(1, num_neurons, num_neurons) / num_neurons
@@ -104,10 +107,6 @@ def caillet_quadratic(num_neurons=300):
 
     # Calculate soma diameters using a quadratic relationship
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
-
-    # Simulation parameters (same for all neurons)
-    T = 400.0  # Total duration of simulation [ms]
-    dt = 0.1  # Simulation time step [ms]
 
     # Define the refractory period (assumed to be 2 ms for all neurons)
     # refractory_time_ms = 2  # in ms
@@ -138,7 +137,7 @@ def caillet_quadratic(num_neurons=300):
         g_L = 1 / R  # in μS (since C is in nF and tau is in ms)
 
         # Set other parameters
-        V_rest = -65  # Resting potential in mV
+        V_rest = -75  # Resting potential in mV
         V_th = -50  # Threshold potential in mV
         V_reset = -70  # Reset potential in mV
         V_init = V_rest  # Initial potential in mV
@@ -226,6 +225,52 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     tau_slider.on_changed(update)
 
 
+def plot_single(pars, I, I_time):
+    v, sp = run_LIF(pars, Iinj=I, stop=False)
+    V_th = pars["V_th"]
+    dt, range_t = pars["dt"], pars["range_t"]
+    if sp.size:
+        sp_num = (sp / dt).astype(int) - 1
+        v[sp_num] += 20  # draw nicer spikes
+
+    # Plot the initial voltage trace
+    fig, ax = plt.subplots()
+    (current_line,) = ax.plot(I_time, (I + pars["V_th"]), "r--")
+    (line,) = ax.plot(pars["range_t"], v, "b")
+    ax.axhline(pars["V_th"], color="k", ls="--")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("V (mV)")
+    ax.legend(["Current Input", "Membrane\npotential", r"Threshold V$_{\mathrm{th}}$"])
+    ax.set_ylim([-80, -20])
+    ax.set_title("Voltage Response for current I")
+
+    # Adjust the main plot to make room for the slider
+    fig.subplots_adjust(left=0.25, bottom=0.25)
+
+    # Create a horizontal slider to control I_dc
+    ax_I = fig.add_axes([0.25, 0.1, 0.65, 0.03], facecolor="lightgoldenrodyellow")
+    I_slider = Slider(
+        ax=ax_I, label="max_I [nA]", valmin=1, valmax=50, valinit=np.max(I), valstep=1
+    )
+
+    # Update function to be called when the slider's value changes
+    def update(val):
+        I_time, I_trapz = trapez_current(
+            duration=400, dt=0.1, max_current=I_slider.val, ramp_time=100, hold_time=200
+        )
+        v, sp = run_LIF(pars, Iinj=I_trapz, stop=False)
+        # Update spikes visualization
+        if sp.size:
+            sp_num = (sp / dt).astype(int) - 1
+            v[sp_num] += 20
+        line.set_ydata(v)
+        current_line.set_ydata(I_trapz + pars["V_th"])
+        fig.canvas.draw_idle()
+
+    # Register the update function with the slider
+    I_slider.on_changed(update)
+
+
 def F_I_SingleNeuron(pars, Imin=1, Imax=50, n_samples=50):
     # calculates and plots F-I curve for a neuron with properties *pars* for current between Imin and Imax
     I_range = np.linspace(start=Imin, stop=Imax, num=n_samples)
@@ -276,14 +321,21 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
 
 
 def _main():
+    T = 400.0  # simulation time [ms]
+    dt = 0.1  # time stem [ms]
+    pars_dict = caillet_quadratic(T=400.0, dt=0.1, num_neurons=300)  # Get parameters
 
-    pars = caillet_quadratic()  # Get parameters
+    I_time, I_trapz = trapez_current(
+        duration=T, dt=dt, max_current=20, ramp_time=100, hold_time=200
+    )
+
+    plot_single(pars_dict[50], I_trapz, I_time)
     # print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[100], 19)
 
     # F_I_SingleNeuron(pars[50])
-    F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
-    plt.legend(["10", "50", "150", "250"])
+    # F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
+    # plt.legend(["10", "50", "150", "250"])
     plt.show()
 
 
