@@ -93,88 +93,14 @@ def default_pars(**kwargs):  # FROM NEURONMATCH
     return pars
 
 
-def caillet_random_pars(num_neurons=300):  # Randomly sample parameters for 300 neurons
-    # Define the mean and standard deviation for the soma diameter (FIND REAL VALUES!!)
-    soma_diameter_mean = 50  # in micrometers
-    soma_diameter_std = 5  # in micrometers
-
-    # Generate random soma diameters for each neuron
-    soma_diameters = np.random.normal(
-        soma_diameter_mean, soma_diameter_std, num_neurons
-    )
-
-    # Simulation parameters (same for all neurons)
-    T = 400.0  # Total duration of simulation [ms]
-    dt = 0.1  # Simulation time step [ms]
-
-    # Define the refractory period (assumed to be 2 ms for all neurons)
-    refractory_time_ms = 2  # in ms
-
-    # Create a list to store parameters for each neuron
-    neuron_list = []
-
-    for i in range(num_neurons):
-        D_soma = soma_diameters[i]  # Soma diameter in micrometers
-
-        # Calculate dependent parameters using empirical relationships
-        R = 9.6e5 * (D_soma**-2.4)  # Input resistance [MΩ]
-        C = 1.2 * D_soma  # Membrane capacitance [nF]
-        tau = 2.6e4 * (D_soma**-1.5)  # Membrane time constant [ms]
-        I_th = 9.0e-4 * (D_soma**2.5)  # Rheobase current [nA]
-        AHP = 2.5e4 * (D_soma**-1.5)  # Afterhyperpolarization duration [ms]
-        ACV = 4.0 * (D_soma**0.7)  # Axonal conduction velocity [m/s]
-
-        # Calculate leak conductance (g_L = C / tau)
-        g_L = C / tau  # in μS (since C is in nF and tau is in ms)
-
-        # Set other parameters
-        V_rest = -65  # Resting potential in mV
-        V_th = -50  # Threshold potential in mV
-        V_reset = -70  # Reset potential in mV
-        V_init = V_rest  # Initial potential in mV
-
-        # Store parameters for the neuron
-        neuron_list.append(
-            {
-                "number": i,
-                "soma_diameter": D_soma,
-                "R": R,  # Input resistance [MΩ]
-                "C": C,  # Membrane capacitance [nF]
-                "tau_m": tau,  # Membrane time constant [ms]
-                "I_th": I_th,  # Rheobase current [nA]
-                "AHP": AHP,  # Afterhyperpolarization duration [ms]
-                "ACV": ACV,  # Axonal conduction velocity [m/s]
-                "g_L": g_L,  # Leak conductance [μS]
-                "V_rest": V_rest,  # Resting potential [mV]
-                "V_th": V_th,  # Threshold potential [mV]
-                "V_reset": V_reset,  # Reset potential [mV]
-                "V_init": V_init,  # Initial potential [mV]
-                "refractory_time": refractory_time_ms,  # Refractory period [ms]
-                "T": T,  # Total duration of simulation [ms]
-                "dt": dt,  # Simulation time step [ms]
-                "range_t": np.arange(
-                    0, T, dt
-                ),  # Vector of discretized time points [ms]
-            }
-        )
-
-    # Sort the neurons by soma diameter in ascending order
-    neuron_list.sort(key=lambda x: x["soma_diameter"])
-
-    # Convert the sorted list to a dictionary for compatibility
-    pars = {i: neuron_list[i] for i in range(num_neurons)}
-
-    return pars
-
-
 # Sample parameters for 300 neurons using quadratic formula
 def caillet_quadratic(num_neurons=300):
 
     # Generate normalized indices
     i_values = np.linspace(0, 1, num_neurons)
 
-    soma_Dmin = 50e-6  # minimum soma diameter in micro meter
-    soma_Dmax = 100e-6  # maximum soma diameter in micro meter
+    soma_Dmin = 50e-6  # minimum soma diameter in meter
+    soma_Dmax = 100e-6  # maximum soma diameter in meter
 
     # Calculate soma diameters using a quadratic relationship
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
@@ -184,7 +110,7 @@ def caillet_quadratic(num_neurons=300):
     dt = 0.1  # Simulation time step [ms]
 
     # Define the refractory period (assumed to be 2 ms for all neurons)
-    refractory_time_ms = 2  # in ms
+    # refractory_time_ms = 2  # in ms
 
     # Create a list to store parameters for each neuron
     neuron_list = []
@@ -206,7 +132,7 @@ def caillet_quadratic(num_neurons=300):
         C = C * 1e9  # Membrane capacitance [nF]
         tau = tau * 1e3  # Membrane time constant [ms]
         t_ref = t_ref * 1e3  # (Refractory time) in [ms]
-        D_soma = D_soma * 1e6  # Soma diameter in MICROmeters
+        D_soma = D_soma * 1e6  # Soma diameter in [μm]
 
         # Calculate leak conductance (g_L = C / tau)
         g_L = C / tau  # in μS (since C is in nF and tau is in ms)
