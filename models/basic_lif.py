@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+from simple_inputs import trapez_current, linear_spiking_current
 
 
 def run_LIF(pars, Iinj, stop=False):
