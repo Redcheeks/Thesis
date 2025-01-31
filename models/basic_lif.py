@@ -97,7 +97,7 @@ def default_pars(**kwargs):  # FROM NEURONMATCH
 def caillet_quadratic(num_neurons=300):
 
     # Generate normalized indices
-    i_values = np.linspace(0, 1, num_neurons)
+    i_values = np.linspace(1, num_neurons, num_neurons) / num_neurons
 
     soma_Dmin = 50e-6  # minimum soma diameter in meter
     soma_Dmax = 100e-6  # maximum soma diameter in meter
@@ -176,7 +176,7 @@ def caillet_quadratic(num_neurons=300):
 
 def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     # Run the LIF model to get initial voltage and spikes
-    pars["tau_m"] = tau_m
+    # pars["tau_m"] = tau_m
 
     v, sp = run_LIF(pars, Iinj=I_dc, stop=True)
     V_th = pars["V_th"]
@@ -206,7 +206,7 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     # Create a second horizontal slider to control tau_m
     ax_tau = fig.add_axes([0.25, 0.05, 0.65, 0.03], facecolor="lightgoldenrodyellow")
     tau_slider = Slider(
-        ax=ax_tau, label="tau_m ", valmin=2, valmax=20, valinit=tau_m, valstep=2
+        ax=ax_tau, label="tau_m ", valmin=2, valmax=20, valinit=pars["tau_m"], valstep=2
     )
 
     # Update function to be called when the slider's value changes
@@ -236,7 +236,7 @@ def F_I_SingleNeuron(pars, Imin=1, Imax=50, n_samples=50):
 
         v, sp = run_LIF(pars, Iinj=i, stop=True)
         if sp.size > 0:
-            freq.append(1 / (sp[2] - sp[1]))
+            freq.append(1 / (sp[1] - sp[0]) * 1e3)
         else:
             freq.append(0)
 
@@ -258,11 +258,11 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
     it = 0
     for pars in pars_list:  # for each of the neurons
         it += 1
-        for i in I_range:
+        for I_test in I_range:
 
-            v, sp = run_LIF(pars, Iinj=i, stop=True)
+            v, sp = run_LIF(pars, Iinj=I_test, stop=True)
             if sp.size > 1:
-                freq.append(1 / (sp[1] - sp[0]))
+                freq.append(1 / (sp[1] - sp[0]) * 1e3)
             else:
                 freq.append(0)
         ax.plot(I_range, freq)
@@ -278,10 +278,10 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
 def _main():
 
     pars = caillet_quadratic()  # Get parameters
-    print(pars[250]["tau_m"], pars[150]["tau_m"])
-    # diff_DC(pars[250])
-    # pars[100]["tau_m"] = 10
-    # F_I_SingleNeuron(pars[100])
+    # print(pars[250]["tau_m"], pars[150]["tau_m"])
+    # diff_DC(pars[100], 19)
+
+    # F_I_SingleNeuron(pars[50])
     F_I_MultiNeuron([pars[10], pars[50], pars[150], pars[250]], Imax=100)
     plt.legend(["10", "50", "150", "250"])
     plt.show()
