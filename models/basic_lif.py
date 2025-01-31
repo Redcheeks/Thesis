@@ -9,7 +9,7 @@ def run_LIF(pars, Iinj, stop=False):
 
     Args:
       pars       : parameter dictionary
-      Iinj       : input current [pA]. The injected current here can be a value
+      Iinj       : input current [nA]. The injected current here can be a value
                    or an array
       stop       : boolean. If True, use a current pulse
 
@@ -62,7 +62,6 @@ def run_LIF(pars, Iinj, stop=False):
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * dt
-    # print(rec_spikes)
 
     return v, rec_spikes
 
@@ -135,7 +134,7 @@ def caillet_quadratic(num_neurons=300):
         D_soma = D_soma_unit * 1e6  # Soma diameter in [μm]
 
         # Calculate leak conductance (g_L = C / tau)
-        g_L = C / tau  # in μS (since C is in nF and tau is in ms)
+        g_L = 1 / R  # in μS (since C is in nF and tau is in ms)
 
         # Set other parameters
         V_rest = -65  # Resting potential in mV
@@ -236,7 +235,7 @@ def F_I_SingleNeuron(pars, Imin=1, Imax=50, n_samples=50):
 
         v, sp = run_LIF(pars, Iinj=i, stop=True)
         if sp.size > 0:
-            freq.append(1 / (sp[1] - sp[0]) * 1e3)
+            freq.append(1e3 / (sp[1] - sp[0]))
         else:
             freq.append(0)
 
@@ -262,7 +261,7 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
 
             v, sp = run_LIF(pars, Iinj=I_test, stop=True)
             if sp.size > 1:
-                freq.append(1 / (sp[1] - sp[0]) * 1e3)
+                freq.append(1e3 / (sp[1] - sp[0]))
             else:
                 freq.append(0)
         ax.plot(I_range, freq)
