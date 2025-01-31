@@ -4,6 +4,12 @@ from matplotlib.widgets import Slider
 from simple_inputs import trapez_current, linear_spiking_current
 
 
+# Global variable
+T = 400  # Simulation Time [ms]
+DT = 0.1  # Time step in [ms]
+NUM_NEURONS = 300  # Number of Neurons simulated
+
+
 def run_LIF(pars, Iinj, stop=False):
     """
     Simulate the LIF dynamics with external input current
@@ -24,7 +30,7 @@ def run_LIF(pars, Iinj, stop=False):
     tau_m, g_L = pars["tau_m"], pars["g_L"]
     V_init, E_L = pars["V_init"], pars["E_L"]
     R_m = pars["R"]
-    dt, range_t = pars["dt"], pars["range_t"]
+    range_t = pars["range_t"]
     Lt = range_t.size
     tref = pars["tref"]
 
@@ -53,16 +59,16 @@ def run_LIF(pars, Iinj, stop=False):
         elif v[it] >= V_th:  # if voltage over threshold
             rec_spikes.append(it)  # record spike event
             v[it] = V_reset  # reset voltage
-            tr = tref / dt  # set refractory time
+            tr = tref / DT  # set refractory time
 
         # Calculate the increment of the membrane potential
-        dv = (-(v[it] - E_L) + (Iinj[it] / g_L)) * (dt / tau_m)
+        dv = (-(v[it] - E_L) + (Iinj[it] / g_L)) * (DT / tau_m)
 
         # Update the membrane potential
         v[it + 1] = v[it] + dv
 
     # Get spike times in ms
-    rec_spikes = np.array(rec_spikes) * dt
+    rec_spikes = np.array(rec_spikes) * DT
 
     return v, rec_spikes
 
@@ -94,7 +100,7 @@ def default_pars(**kwargs):  # FROM NEURONMATCH
 
 
 # Sample parameters for 300 neurons using quadratic formula
-def caillet_quadratic(T=400.0, dt=0.1, num_neurons=300):
+def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
     # Simulation parameters (same for all neurons)
     # T- Total duration of simulation [ms]
     # dt - Simulation time step [ms]
@@ -225,12 +231,12 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     tau_slider.on_changed(update)
 
 
-def plot_single(pars, I, I_time):
+def plot_single_trap(pars, I, I_time):
     v, sp = run_LIF(pars, Iinj=I, stop=False)
     V_th = pars["V_th"]
-    dt, range_t = pars["dt"], pars["range_t"]
+    range_t = pars["range_t"]
     if sp.size:
-        sp_num = (sp / dt).astype(int) - 1
+        sp_num = (sp / DT).astype(int) - 1
         v[sp_num] += 20  # draw nicer spikes
 
     # Plot the initial voltage trace
@@ -256,12 +262,12 @@ def plot_single(pars, I, I_time):
     # Update function to be called when the slider's value changes
     def update(val):
         I_time, I_trapz = trapez_current(
-            duration=400, dt=0.1, max_current=I_slider.val, ramp_time=100, hold_time=200
+            T, DT, max_current=I_slider.val, ramp_time=100, hold_time=200
         )
         v, sp = run_LIF(pars, Iinj=I_trapz, stop=False)
         # Update spikes visualization
         if sp.size:
-            sp_num = (sp / dt).astype(int) - 1
+            sp_num = (sp / DT).astype(int) - 1
             v[sp_num] += 20
         line.set_ydata(v)
         current_line.set_ydata(I_trapz + pars["V_th"])
@@ -321,15 +327,14 @@ def F_I_MultiNeuron(pars_list, Imin=1, Imax=50, n_samples=50):
 
 
 def _main():
-    T = 400.0  # simulation time [ms]
-    dt = 0.1  # time stem [ms]
-    pars_dict = caillet_quadratic(T=400.0, dt=0.1, num_neurons=300)  # Get parameters
+
+    pars_dict = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
 
     I_time, I_trapz = trapez_current(
-        duration=T, dt=dt, max_current=20, ramp_time=100, hold_time=200
+        duration=T, dt=DT, max_current=20, ramp_time=100, hold_time=200
     )
 
-    plot_single(pars_dict[50], I_trapz, I_time)
+    plot_single_trap(pars_dict[50], I_trapz, I_time)
     # print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[100], 19)
 
