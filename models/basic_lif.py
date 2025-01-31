@@ -5,7 +5,7 @@ from simple_inputs import trapez_current, linear_spiking_current
 
 
 # Global variable
-T = 400  # Simulation Time [ms]
+T = 800  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 NUM_NEURONS = 300  # Number of Neurons simulated
 
@@ -231,7 +231,14 @@ def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     tau_slider.on_changed(update)
 
 
-def plot_single_trap(pars, I, I_time):
+def plot_single_trap(pars, current_func, max_I=20, spike_amp=5, spike_freq=5):
+    if current_func == trapez_current:
+
+        I_time, I = current_func(T, DT, max_I, 100)
+
+    else:  # elif current_func == linear_spiking_current:
+        I_time, I = current_func(T, DT, 20, 100, spike_amp, spike_freq)
+
     v, sp = run_LIF(pars, Iinj=I, stop=False)
     V_th = pars["V_th"]
     range_t = pars["range_t"]
@@ -241,7 +248,7 @@ def plot_single_trap(pars, I, I_time):
 
     # Plot the initial voltage trace
     fig, ax = plt.subplots()
-    (current_line,) = ax.plot(I_time, (I + pars["V_th"]), "r--")
+    (current_line,) = ax.plot(I_time, (I + pars["V_reset"]), "r--")
     (line,) = ax.plot(pars["range_t"], v, "b")
     ax.axhline(pars["V_th"], color="k", ls="--")
     ax.set_xlabel("Time (ms)")
@@ -261,16 +268,20 @@ def plot_single_trap(pars, I, I_time):
 
     # Update function to be called when the slider's value changes
     def update(val):
-        I_time, I_trapz = trapez_current(
-            T, DT, max_current=I_slider.val, ramp_time=100, hold_time=200
-        )
-        v, sp = run_LIF(pars, Iinj=I_trapz, stop=False)
+
+        if current_func == trapez_current:
+            I_time, I = current_func(T, DT, I_slider.val, 100)
+
+        else:  # elif current_func == linear_spiking_current:
+            I_time, I = current_func(T, DT, I_slider.val, 100, spike_amp, spike_freq)
+
+        v, sp = run_LIF(pars, Iinj=I, stop=False)
         # Update spikes visualization
         if sp.size:
             sp_num = (sp / DT).astype(int) - 1
             v[sp_num] += 20
         line.set_ydata(v)
-        current_line.set_ydata(I_trapz + pars["V_th"])
+        current_line.set_ydata(I + pars["V_reset"])
         fig.canvas.draw_idle()
 
     # Register the update function with the slider
@@ -330,11 +341,7 @@ def _main():
 
     pars_dict = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
 
-    I_time, I_trapz = trapez_current(
-        duration=T, dt=DT, max_current=20, ramp_time=100, hold_time=200
-    )
-
-    plot_single_trap(pars_dict[50], I_trapz, I_time)
+    plot_single_trap(pars_dict[50], linear_spiking_current)
     # print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[100], 19)
 
