@@ -174,57 +174,6 @@ def caillet_quadratic(num_neurons=300):
     return pars
 
 
-# Code for plotting
-def plot_GWN(pars, I_GWN):
-    """
-    Args:
-      pars  : parameter dictionary
-      I_GWN : Gaussian white noise input
-
-    Returns:
-      figure of the gaussian white noise input
-    """
-
-    plt.figure(figsize=(12, 4))
-    plt.subplot(121)
-    plt.plot(pars["range_t"][::3], I_GWN[::3], "b")
-    plt.xlabel("Time (ms)")
-    plt.ylabel(r"$I_{GWN}$ (pA)")
-    plt.subplot(122)
-    plot_volt_trace(pars, v, sp)
-    plt.tight_layout()
-    plt.show()
-
-
-def my_hists(isi1, isi2, cv1, cv2, sigma1, sigma2):
-    """
-    Args:
-      isi1 : vector with inter-spike intervals
-      isi2 : vector with inter-spike intervals
-      cv1  : coefficient of variation for isi1
-      cv2  : coefficient of variation for isi2
-
-    Returns:
-      figure with two histograms, isi1, isi2
-
-    """
-    plt.figure(figsize=(11, 4))
-    my_bins = np.linspace(10, 30, 20)
-    plt.subplot(121)
-    plt.hist(isi1, bins=my_bins, color="b", alpha=0.5)
-    plt.xlabel("ISI (ms)")
-    plt.ylabel("count")
-    plt.title(r"$\sigma_{GWN}=$%.1f, CV$_{\mathrm{isi}}$=%.3f" % (sigma1, cv1))
-
-    plt.subplot(122)
-    plt.hist(isi2, bins=my_bins, color="b", alpha=0.5)
-    plt.xlabel("ISI (ms)")
-    plt.ylabel("count")
-    plt.title(r"$\sigma_{GWN}=$%.1f, CV$_{\mathrm{isi}}$=%.3f" % (sigma2, cv2))
-    plt.tight_layout()
-    plt.show()
-
-
 def diff_DC(pars, I_dc=10.0, tau_m=10.0):  # Plot interactively I_DC
     # Run the LIF model to get initial voltage and spikes
     pars["tau_m"] = tau_m
