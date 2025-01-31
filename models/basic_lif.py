@@ -15,7 +15,7 @@ def run_LIF(pars, Iinj, stop=False):
 
     Returns:
       rec_v      : membrane potential
-      rec_sp     : spike times
+      rec_sp     : spike times weeeee
     """
 
     # Set parameters
