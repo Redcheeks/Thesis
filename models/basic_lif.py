@@ -116,23 +116,23 @@ def caillet_quadratic(num_neurons=300):
     neuron_list = []
 
     for i in range(num_neurons):
-        D_soma = soma_diameters[i]  # Soma diameter in meters
+        D_soma_unit = soma_diameters[i]  # Soma diameter in meters
 
         # Calculate dependent parameters using empirical relationships
-        I_th = 3.85e-9 * (9.1 ** ((i / num_neurons) ** 1.831))  # Rheobase current [A]
-        S = 3.96e-4 * (I_th**0.396)  # (Neuron surface area) in square meters [m^2]
-        R = 1.68e-10 * (S**-2.43)  # Input resistance [Ω]
-        C = 7.9e-5 * D_soma  # Membrane capacitance [F]
-        tau = 7.9e-5 * D_soma * R  # Membrane time constant [s]
-        t_ref = 0.2 * 2.7e-8 * (D_soma**-1.51)  # (Refractory time) in [s]
+        S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
+        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
+        R_unit = 1.68e-10 * (S_unit**-2.43)  # Input resistance [Ω]
+        C_unit = 7.9e-5 * D_soma_unit  # Membrane capacitance [F]
+        tau_unit = 7.9e-5 * D_soma_unit * R_unit  # Membrane time constant [s]
+        t_ref_unit = 0.2 * 2.7e-8 * (D_soma_unit**-1.51)  # (Refractory time) in [s]
 
         # adjust units
-        I_th = I_th * 1e9  # Rheobase current [nA]
-        R = R * 1e-6  # Input resistance [MΩ]
-        C = C * 1e9  # Membrane capacitance [nF]
-        tau = tau * 1e3  # Membrane time constant [ms]
-        t_ref = t_ref * 1e3  # (Refractory time) in [ms]
-        D_soma = D_soma * 1e6  # Soma diameter in [μm]
+        I_th = I_th_unit * 1e9  # Rheobase current [nA]
+        R = R_unit * 1e-6  # Input resistance [MΩ]
+        C = C_unit * 1e9  # Membrane capacitance [nF]
+        tau = tau_unit * 1e3  # Membrane time constant [ms]
+        t_ref = 2.0  # t_ref_unit * 1e3  # (Refractory time) in [ms]
+        D_soma = D_soma_unit * 1e6  # Soma diameter in [μm]
 
         # Calculate leak conductance (g_L = C / tau)
         g_L = C / tau  # in μS (since C is in nF and tau is in ms)
