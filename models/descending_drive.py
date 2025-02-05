@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as signal
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import seaborn as sns  # you may need to run:     conda install seaborn -c conda-forge and maybe update your environment
 
@@ -37,13 +38,13 @@ def cortical_input(
     # Total duration including transient
     fs = 1 / (dt * 1e-3)
 
-    time = np.arange(0, T_dur_ext, dt)
+    time = np.arange(0, T_dur, dt)
 
     if mean_shape == "trapezoid":
         # Compute the number of samples for each phase
-        zero_len = int(round(0.01 * T_dur) / dt)  # Zero start and end
+        zero_len = int(round(0.00 * T_dur) / dt)  # Zero start and end
         ramp_len = int(round(0.16 * T_dur) / dt)  # Ramp-up and ramp-down
-        hold_len = int(round(0.66 * T_dur) / dt) + 1  # Hold phase
+        hold_len = int(round(0.68 * T_dur) / dt)  # + 1  # Hold phase
 
         # Create each section
         zero_segment = np.zeros(zero_len)
@@ -60,21 +61,26 @@ def cortical_input(
         ramp_len = int(round(0.5 * T_dur) / dt)  # Ramp-up and ramp-down
 
         # Create each section
-        ramp_up = np.linspace(0, max_I, 1 + ramp_len)
+        ramp_up = np.linspace(0, max_I, ramp_len)
         ramp_down = np.flip(np.linspace(0, max_I, ramp_len))
 
         mean_drive = np.concatenate([ramp_up, ramp_down])
 
     elif mean_shape == "sinusoid.hz":
-        sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * T_dur)
 
+        time_sin = np.arange(0, T_dur, dt)  # Time vector
+
+        # Generate the sinusoidal wave
+        sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * time_sin)
+
+        # Normalize to range [0, max_I]
         mean_drive = max_I * (sine_wave + 1) / 2
 
     else:  # elif mean_shape == "step":
 
         # Compute the number of samples for each phase
         ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
-        hold_len = int(round((4 / 12) * T_dur) / dt) + 1  # Hold phase
+        hold_len = int(round((4 / 12) * T_dur) / dt)  # Hold phase
 
         # Create each section
 
@@ -99,17 +105,15 @@ def cortical_input(
     gNoise = np.random.randn(n_clust, len(time))  # White noise
     commonNoise = signal.filtfilt(b_band, a_band, gNoise, axis=1)  # Band-pass filter
 
-    # Scale common noise
-    drive_com = (commonNoise / np.std(commonNoise, axis=1, keepdims=True)) * (
-        CCoV / 100 * mean_CI
-    )
-
-    start_idx = min(int(ext_sig * fs), len(time) - 1)  # Ensure within bounds
-    drive_com = drive_com[:, start_idx:]  # Safe slicing  # Remove transient effect
+    # Scale common noise correctly
+    std_common = np.std(
+        commonNoise, axis=1, keepdims=True
+    )  # Keep shape as (n_clust, 1)
+    drive_common = (commonNoise / std_common) * (CCoV / 100 * mean_CI)
 
     # Structured Cluster Assignment
     avg_mn_per_clust = n_mn // n_clust  # Neurons per cluster (integer division)
-    drive_com_new = np.zeros((n_mn, drive_com.shape[1]))  # Initialize matrix
+    drive_com_new = np.zeros((n_mn, drive_common.shape[1]))  # Initialize matrix
 
     # Assign neurons sequentially to clusters
     for cluster_idx in range(n_clust):
@@ -117,7 +121,7 @@ def cortical_input(
         end_idxx = (
             (cluster_idx + 1) * avg_mn_per_clust if cluster_idx < n_clust - 1 else n_mn
         )  # Ensure all neurons are assigned
-        drive_com_new[start_idxx:end_idxx, :] = drive_com[
+        drive_com_new[start_idxx:end_idxx, :] = drive_common[
             cluster_idx, :
         ]  # Assign cluster noise
 
@@ -126,18 +130,15 @@ def cortical_input(
     indNoise = signal.filtfilt(b_low, a_low, gNoise, axis=1)  # Low-pass filter
 
     # Scale independent noise
-    drive_ind = (indNoise / np.std(indNoise, axis=1, keepdims=True)) * (
+    drive_ind = (indNoise / np.std(indNoise, axis=0, keepdims=True)) * (
         ICoV / 100 * mean_CI
     )
-    drive_ind = drive_ind[
-        :, start_idx:
-    ]  # Ensure valid indexing  # Remove transient effect
 
     # Combine mean drive, common drive, and independent noise
     CI = (
         mean_drive[:, np.newaxis] + drive_com_new.T + drive_ind.T
     )  # Final cortical input matrix
-
+    CI = np.clip(CI, 0, None)
     return CI
 
 
@@ -148,10 +149,12 @@ def _main():
     n_mn = 300  # Number of motor neurons
     n_clust = 5  # Number of clusters
     max_I = 50  # Max input current (nA)
-    CCoV = 20  # Common noise CoV (%)
-    ICoV = 5  # Independent noise CoV (%)
+    CCoV = 10  # Common noise CoV (%)
+    ICoV = 1  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "step")
+    CI = cortical_input(
+        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 0.01
+    )
 
     # Plot the first motor neuron's cortical input
     plt.figure(1, figsize=(8, 6))
