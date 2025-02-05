@@ -350,13 +350,22 @@ def _main():
     CCoV = 20  # Common noise CoV (%)
     ICoV = 5  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "triangular")
+    CI = cortical_input(
+        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 0.01
+    )
     time = np.linspace(0, T_dur, int(T / DT))
     output = {}
     for i in range(NUM_NEURONS):
-        output[i] = run_LIF(pars_dict[i], CI[: int(T / DT), i])
+        v, sp = run_LIF(pars_dict[i], CI[: int(T / DT), i])
+        if sp.size:
+            sp_num = (sp / dt).astype(int) - 1
+            v[sp_num] += 20  # draw nicer spikes
+        output[i] = v, sp
+
+    fig, ax = plt.subplots()
 
     plt.plot(time, output[5][0], label=f"Neuron")
+    ax.axhline(pars_dict[5]["V_th"], color="k", ls="--")
     # plot_single_trap(pars_dict[50], linear_spiking_current)
     # print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[100], 19)
