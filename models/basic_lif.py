@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from simple_inputs import trapez_current, linear_spiking_current
+from descending_drive import cortical_input
 
 
 # Global variable
-T = 800  # Simulation Time [ms]
+T = 400  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 NUM_NEURONS = 300  # Number of Neurons simulated
 
@@ -341,7 +342,22 @@ def _main():
 
     pars_dict = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
 
-    plot_single_trap(pars_dict[50], linear_spiking_current)
+    T_dur = T  # Total time in ms
+    dt = DT  # Time step in ms
+    n_mn = NUM_NEURONS  # Number of motor neurons
+    n_clust = 5  # Number of clusters
+    max_I = 50  # Max input current (nA)
+    CCoV = 20  # Common noise CoV (%)
+    ICoV = 5  # Independent noise CoV (%)
+
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "triangular")
+    time = np.linspace(0, T_dur, int(T / DT))
+    output = {}
+    for i in range(NUM_NEURONS):
+        output[i] = run_LIF(pars_dict[i], CI[: int(T / DT), i])
+
+    plt.plot(time, output[5][0], label=f"Neuron")
+    # plot_single_trap(pars_dict[50], linear_spiking_current)
     # print(pars[250]["tau_m"], pars[150]["tau_m"])
     # diff_DC(pars[100], 19)
 

@@ -41,7 +41,7 @@ def cortical_input(
 
     if mean_shape == "trapezoid":
         # Compute the number of samples for each phase
-        zero_len = int(round(0.00 * T_dur) / dt)  # Zero start and end
+        zero_len = int(round(0.01 * T_dur) / dt)  # Zero start and end
         ramp_len = int(round(0.16 * T_dur) / dt)  # Ramp-up and ramp-down
         hold_len = int(round(0.66 * T_dur) / dt) + 1  # Hold phase
 
@@ -73,8 +73,8 @@ def cortical_input(
     else:  # elif mean_shape == "step":
 
         # Compute the number of samples for each phase
-        ramp_len = int(round((1 / 12) * T_dur) / dt)  # Ramp-up
-        hold_len = int(round((5 / 12) * T_dur) / dt) + 1  # Hold phase
+        ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
+        hold_len = int(round((4 / 12) * T_dur) / dt) + 1  # Hold phase
 
         # Create each section
 
