@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as signal
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  # you may need to run:     conda install seaborn -c conda-forge and maybe update your environment
 
 # to do: implement descending drives. look at robins code
 
