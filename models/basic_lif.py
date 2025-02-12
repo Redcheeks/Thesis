@@ -159,7 +159,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         V_reset = -70  # Reset potential in mV
         V_init = V_rest  # Initial potential in mV
         E_L = -75.0  # leak reversal potential in mV
-        gain_leak = gain_leak_array[i]  # Gain parameter leakage
+        gain_leak = 1  # gain_leak_array[i]  # Gain parameter leakage
         gain_exc = gain_leak  # Gain parameter excitability
 
         # Store parameters for the neuron
@@ -339,7 +339,7 @@ def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
         if len(sp) < 2:
             freq = 0  # Not enough spikes to compute frequency
         else:
-            isi = np.diff(sp)  # Compute interspike intervals
+            isi = np.diff(sp * 1e-3)  # Compute interspike intervals, time in ms
 
             # Assign frequency values to corresponding spike times (excluding the first spike)
             freq[i] = np.concatenate(([0], 1 / isi))  # First spike has no frequency
@@ -374,13 +374,13 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 10  # Max input current (nA)
+    max_I = 50  # Max input current (nA)
     CCoV = 20  # Common noise CoV (%)
     ICoV = 5  # Independent noise CoV (%)
 
     CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
     # time = np.linspace(0, T_dur, int(T / DT))
-    Freq_plot(CI, pars_dict, neurons=[50])
+    Freq_plot(CI, pars_dict, neurons=[5])
 
     plt.show()
 
