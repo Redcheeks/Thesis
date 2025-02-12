@@ -36,6 +36,7 @@ def run_LIF(pars, Iinj, stop=False):
     tref = pars["tref"]
     gain_leak = pars["gain_leak"]
     gain_exc = pars["gain_exc"]
+    d_soma = pars["D_soma"]
 
     # Initialize voltage
     v = np.zeros(Lt)
@@ -66,12 +67,15 @@ def run_LIF(pars, Iinj, stop=False):
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
 
-        # Calculate renshaw feedback, sudden increase in current should allow doublet in large cells
-        # di = Iinj[it+1]-Iinj[it]
-        # renshaw = di *
+        # Calculate renshaw feedback, sudden increase in current should allow doublet in larger cells
+        # inversely related to soma size.
+        di = Iinj[it + 1] - Iinj[it]
+        renshaw = di / d_soma
 
         # Calculate the increment of the membrane potential
-        dv = (-gain_leak * (v[it] - E_L) + gain_exc * (Iinj[it] * R_m)) * (DT / tau_m)
+        dv = (-(gain_leak + renshaw) * (v[it] - E_L) + gain_exc * (Iinj[it] * R_m)) * (
+            DT / tau_m
+        )
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
@@ -359,8 +363,8 @@ def _main():
 
     CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
     # time = np.linspace(0, T_dur, int(T / DT))
-    Output_plot(CI, pars_dict, neurons=[5])
-    Freq_plot(CI, pars_dict, neurons=[5])
+    # Output_plot(CI, pars_dict, neurons=[5])
+    Freq_plot(CI, pars_dict, neurons=[5, 50, 200])
 
     plt.show()
 
