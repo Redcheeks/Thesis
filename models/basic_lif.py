@@ -301,7 +301,6 @@ def F_I_plot(pars_dict, Imin=1, Imax=50, n_samples=50, neurons=[5, 50, 150, 200,
 
 
 def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
-    # calculates and plots F-I curve for a neuron with properties *pars* for current between Imin and Imax
 
     time = np.linspace(0, T, int(T / DT))
     freq = {}  # record freq over time
