@@ -71,9 +71,9 @@ def run_LIF(pars, Iinj, stop=False):
         # renshaw = di *
 
         # Calculate the increment of the membrane potential
-        dv = (-gain_leak * (v[it] - E_L) + gain_exc * (Iinj[it] / g_L)) * (DT / tau_m)
+        dv = (-gain_leak * (v[it] - E_L) + gain_exc * (Iinj[it] * R_m)) * (DT / tau_m)
 
-        # Update the membrane potential
+        # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
 
     # Get spike times in ms
@@ -111,10 +111,14 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         # Calculate dependent parameters using empirical relationships
         S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
         I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
-        R_unit = 1.68e-10 * (S_unit**-2.43)  # Input resistance [Ω]
+        R_unit = 1.68e-10 * np.pow(S_unit, -2.43)  # Input resistance [Ω]
         C_unit = 7.9e-5 * D_soma_unit  # Membrane capacitance [F]
-        tau_unit = 7.9e-5 * D_soma_unit * R_unit  # Membrane time constant [s]
-        t_ref_unit = 0.2 * 2.7e-8 * (D_soma_unit**-1.51)  # (Refractory time) in [s]
+        tau_unit = 2.3e-9 * np.pow(
+            D_soma_unit, -1.48
+        )  # 7.9e-5 * D_soma_unit * R_unit  # Membrane time constant [s]
+        t_ref_unit = (
+            0.2 * 2.7e-8 * np.pow(D_soma_unit, -1.51)
+        )  # (Refractory time) in [s]
 
         # adjust units
         I_th = I_th_unit * 1e9  # Rheobase current [nA]
@@ -124,8 +128,8 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         t_ref = 2.0  # t_ref_unit * 1e3  # (Refractory time) in [ms]
         D_soma = D_soma_unit * 1e6  # Soma diameter in [μm]
 
-        # Calculate leak conductance (g_L = C / tau)
-        g_L = 1 / R  # in μS (since C is in nF and tau is in ms)
+        # Calculate leak conductance (g_L = C / tau or 1 / R)
+        g_L = 1 / R * 10  # in μS (since C is in nF and tau is in ms)
 
         # Set other parameters
         V_rest = -75  # Resting potential in mV
@@ -133,7 +137,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         V_reset = -70  # Reset potential in mV
         V_init = V_rest  # Initial potential in mV
         E_L = -75.0  # leak reversal potential in mV
-        gain_leak = 1  # gain_leak_array[i]  # Gain parameter leakage
+        gain_leak = gain_leak_array[i]  # Gain parameter leakage
         gain_exc = gain_leak  # Gain parameter excitability
 
         # Store parameters for the neuron
@@ -327,17 +331,18 @@ def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
 def Output_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
 
     time = np.linspace(0, T, int(T / DT))
-    output = {}
+
+    fig, ax = plt.subplots()
     for i in neurons:
         v, sp = run_LIF(pars_dict[i], CI[: int(T / DT), i])
         if sp.size:
-            sp_num = (sp / dt).astype(int) - 1
+            sp_num = (sp / DT).astype(int) - 1
             v[sp_num] += 20  # draw nicer spikes
-        output[i] = v, sp
 
-    fig, ax = plt.subplots()
-    plt.plot(time, output[4][0], label=f"Neuron")
-    ax.axhline(pars_dict[4]["V_th"], color="k", ls="--")
+        ax.plot(time, v, "b-")
+
+    ax.set_ylim([-80, -20])
+    ax.axhline(pars_dict[1]["V_th"], color="k", ls="--")
 
 
 def _main():
@@ -348,12 +353,13 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 50  # Max input current (nA)
-    CCoV = 20  # Common noise CoV (%)
-    ICoV = 5  # Independent noise CoV (%)
+    max_I = 20  # Max input current (nA)
+    CCoV = 0  # Common noise CoV (%)
+    ICoV = 0  # Independent noise CoV (%)
 
     CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
     # time = np.linspace(0, T_dur, int(T / DT))
+    Output_plot(CI, pars_dict, neurons=[5])
     Freq_plot(CI, pars_dict, neurons=[5])
 
     plt.show()
