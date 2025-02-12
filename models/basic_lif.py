@@ -347,6 +347,7 @@ def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
             ax.plot(sp, freq[i], "-.")
 
     ax.set_ylabel("Frequency (HZ)")
+    ax.set_xlabel("Time (ms)")
     ax.set_title("Frequency-time Plot")
 
 
