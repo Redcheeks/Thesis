@@ -70,12 +70,12 @@ def run_LIF(pars, Iinj, stop=False):
         # Calculate renshaw feedback, sudden increase in current should allow doublet in larger cells
         # inversely related to soma size.
         di = Iinj[it + 1] - Iinj[it]
-        renshaw = di / d_soma
+        renshaw = di * 1e2 / d_soma
 
         # Calculate the increment of the membrane potential
-        dv = (-(gain_leak + renshaw) * (v[it] - E_L) + gain_exc * (Iinj[it] * R_m)) * (
-            DT / tau_m
-        )
+        dv = (
+            -(gain_leak) * (v[it] - E_L) + (gain_exc + renshaw) * (Iinj[it] * R_m)
+        ) * (DT / tau_m)
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
@@ -330,6 +330,7 @@ def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
     ax.set_ylabel("Frequency (HZ)")
     ax.set_xlabel("Time (ms)")
     ax.set_title("Frequency-time Plot")
+    ax.legend(neurons)
 
 
 def Output_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
