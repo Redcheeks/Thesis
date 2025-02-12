@@ -82,32 +82,6 @@ def run_LIF(pars, Iinj, stop=False):
     return v, rec_spikes
 
 
-def default_pars(**kwargs):  # FROM NEURONMATCH
-    pars = {}
-
-    # typical neuron parameters#
-    pars["V_th"] = -55.0  # spike threshold [mV]
-    pars["V_reset"] = -75.0  # reset potential [mV]
-    pars["tau_m"] = 10.0  # membrane time constant [ms]
-    pars["g_L"] = 10.0  # leak conductance [nS]
-    pars["V_init"] = -75.0  # initial potential [mV]
-    pars["E_L"] = -75.0  # leak reversal potential [mV]
-    pars["tref"] = 2.0  # refractory time (ms)
-
-    # simulation parameters #
-    pars["T"] = 400.0  # Total duration of simulation [ms]
-    pars["dt"] = 0.1  # Simulation time step [ms]
-    # external parameters if any #
-    for k in kwargs:
-        pars[k] = kwargs[k]
-
-    pars["range_t"] = np.arange(
-        0, pars["T"], pars["dt"]
-    )  # Vector of discretized time points [ms]
-
-    return pars
-
-
 # Sample parameters for 300 neurons using quadratic formula
 def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
     # Simulation parameters (same for all neurons)
@@ -327,7 +301,6 @@ def F_I_plot(pars_dict, Imin=1, Imax=50, n_samples=50, neurons=[5, 50, 150, 200,
 
 
 def Freq_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
-    # calculates and plots F-I curve for a neuron with properties *pars* for current between Imin and Imax
 
     time = np.linspace(0, T, int(T / DT))
     freq = {}  # record freq over time
