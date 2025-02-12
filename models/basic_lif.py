@@ -97,7 +97,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
     # Calculate soma diameters using a quadratic relationship
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
 
-    gain_leak_array = np.linspace(0.25, 0.15, NUM_NEURONS)
+    leak_array = np.linspace(0.25, 0.15, NUM_NEURONS)
 
     # Define the refractory period (assumed to be 2 ms for all neurons)
     # refractory_time_ms = 2  # in ms
@@ -137,8 +137,8 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         V_reset = -70  # Reset potential in mV
         V_init = V_rest  # Initial potential in mV
         E_L = -75.0  # leak reversal potential in mV
-        gain_leak = gain_leak_array[i]  # Gain parameter leakage
-        gain_exc = gain_leak  # Gain parameter excitability
+        gain_leak = leak_array[i]  # Gain parameter leakage
+        gain_exc = leak_array[i]  # Gain parameter excitability
 
         # Store parameters for the neuron
         neuron_list.append(
