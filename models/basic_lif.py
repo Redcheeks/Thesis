@@ -37,6 +37,8 @@ def run_LIF(pars, Iinj, stop=False):
     gain_leak = pars["gain_leak"]
     gain_exc = pars["gain_exc"]
     d_soma = pars["D_soma"]
+    doublet_current = pars["Doublet_current"]
+    print(doublet_current)
 
     # Initialize voltage
     v = np.zeros(Lt)
@@ -63,7 +65,7 @@ def run_LIF(pars, Iinj, stop=False):
 
         elif v[it] >= V_th:  # if voltage over threshold
             rec_spikes.append(it)  # record spike event
-            doub = 0  # first spike
+            recent_pulse = 1  # spike recorded
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
 
@@ -72,10 +74,18 @@ def run_LIF(pars, Iinj, stop=False):
         di = Iinj[it + 1] - Iinj[it]
         renshaw = di * 1e2 / d_soma
 
+        # Joe fucking about
+        if Iinj[it] >= doublet_current and tr == 0 and doub < 1:
+            rec_spikes.append(it)  # record spike event
+            recent_pulse = 1  # spike recorded
+            doub = 1  # first spike
+            v[it] = V_reset  # reset voltage
+            tr = tref * 2 / DT  # set refractory time
+
         # Calculate the increment of the membrane potential
-        dv = (
-            -(gain_leak) * (v[it] - E_L) + (gain_exc + renshaw) * (Iinj[it] * R_m)
-        ) * (DT / tau_m)
+        dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
+            DT / tau_m
+        )
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
@@ -102,6 +112,9 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
 
     leak_array = np.linspace(0.25, 0.15, NUM_NEURONS)
+    doublet_currents = np.linspace(
+        3.4, 2.1, NUM_NEURONS
+    )  # coefficients for producing doublets
 
     # Define the refractory period (assumed to be 2 ms for all neurons)
     # refractory_time_ms = 2  # in ms
@@ -115,6 +128,9 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         # Calculate dependent parameters using empirical relationships
         S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
         I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
+        Doublet_current_unit = (
+            I_th_unit * doublet_currents[i]
+        )  # Doublet current threshold [A]
         R_unit = 1.68e-10 * np.pow(S_unit, -2.43)  # Input resistance [Ω]
         C_unit = 7.9e-5 * D_soma_unit  # Membrane capacitance [F]
         tau_unit = 2.3e-9 * np.pow(
@@ -126,6 +142,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
 
         # adjust units
         I_th = I_th_unit * 1e9  # Rheobase current [nA]
+        Doublet_Current = Doublet_current_unit * 1e9  # Double current threshold [nA]
         R = R_unit * 1e-6  # Input resistance [MΩ]
         C = C_unit * 1e9  # Membrane capacitance [nF]
         tau = tau_unit * 1e3  # Membrane time constant [ms]
@@ -153,6 +170,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
                 "C": C,  # Membrane capacitance [nF]
                 "tau_m": tau,  # Membrane time constant [ms]
                 "I_th": I_th,  # Rheobase current [nA]
+                "Doublet_current": Doublet_Current,  # Double current thresholds [nA]
                 "g_L": g_L,  # Leak conductance [μS]
                 "V_rest": V_rest,  # Resting potential [mV]
                 "V_th": V_th,  # Threshold potential [mV]
@@ -344,10 +362,11 @@ def Output_plot(CI, pars_dict, neurons=[5, 50, 150, 200, 275]):
             sp_num = (sp / DT).astype(int) - 1
             v[sp_num] += 20  # draw nicer spikes
 
-        ax.plot(time, v, "b-")
+        ax.plot(time, v, "-")
 
     ax.set_ylim([-80, -20])
     ax.axhline(pars_dict[1]["V_th"], color="k", ls="--")
+    ax.legend(neurons)
 
 
 def _main():
@@ -358,7 +377,7 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 20  # Max input current (nA)
+    max_I = 40  # Max input current (nA)
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
@@ -366,7 +385,7 @@ def _main():
     # time = np.linspace(0, T_dur, int(T / DT))
     # Output_plot(CI, pars_dict, neurons=[5])
     Freq_plot(CI, pars_dict, neurons=[5, 50, 200])
-
+    Output_plot(CI, pars_dict, neurons=[5, 50, 200])
     plt.show()
 
 
