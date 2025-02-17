@@ -55,11 +55,15 @@ def run_LIF(pars, Iinj, stop=False):
     # Loop over time
     rec_spikes = []  # record spike times
     tr = 0.0  # the count for refractory duration
-    doub = 0  # last spike doublet = 1, else = 0
-    doub_time = -200 / DT  # time stamp for latest doublet
+    doub = 1  # last spike doublet = 1, else = 0
+    doub_possible = True
+    relax_counter = 200 / DT
     doub_count = 0
 
     for it in range(Lt - 1):
+
+        if relax_counter > 100 / DT:
+            doub_possible = True
 
         if tr > 0:  # check if in refractory period
             v[it] = V_reset  # set voltage to reset
@@ -68,15 +72,16 @@ def run_LIF(pars, Iinj, stop=False):
         elif v[it] >= V_th:  # if voltage over threshold
             rec_spikes.append(it)  # record spike event
             doub = 0
-
+            relax_counter = 0.0
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
 
-        elif Iinj[it] >= doublet_current and (it - doub_time) > (200 / DT) and doub < 1:
+        elif Iinj[it] >= doublet_current and doub_possible and doub < 1:
             rec_spikes.append(it)  # record spike event
             doub = 1
             doub_time = it
-
+            relax_counter = 0.0
+            doub_possible = False
             v[it - 1] = V_th + 20
             v[it] = V_reset  # reset voltage
             tr = tref * 2 / DT  # set refractory time
@@ -89,6 +94,7 @@ def run_LIF(pars, Iinj, stop=False):
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
+        relax_counter += 1
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * DT
@@ -378,11 +384,11 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 40  # Max input current (nA)
+    max_I = 50  # Max input current (nA)
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 5)
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 5)
     # time = np.linspace(0, T_dur, int(T / DT))
     # Output_plot(CI, pars_dict, neurons=[5])
     Freq_plot(CI, pars_dict, neurons=[5, 50, 200])
