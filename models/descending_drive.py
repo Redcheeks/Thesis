@@ -8,7 +8,7 @@ import seaborn as sns  # you may need to run:     conda install seaborn -c conda
 
 
 def cortical_input(
-    n_mn, n_clust, max_I, T_dur, dt, CCoV=20, ICoV=5, mean_shape="trapezoid", freq=0.1
+    n_mn, n_clust, max_I, T_dur, dt, CCoV=20, ICoV=5, mean_shape="trapezoid", freq=2
 ):
     """
     Generates a signal simulating the cortical input to the motorneurons.
@@ -37,6 +37,8 @@ def cortical_input(
     T_dur_ext = T_dur + ext_sig
     # Total duration including transient
     fs = 1 / (dt * 1e-3)
+
+    freq = freq * 1e-3  # hz to 1/ms
 
     time = np.arange(0, T_dur, dt)
 
@@ -152,7 +154,7 @@ def _main():
     CCoV = 20  # Common noise CoV (%)
     ICoV = 1  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 0.01)
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
 
     # Plot the first motor neuron's cortical input
     plt.figure(1, figsize=(8, 6))
