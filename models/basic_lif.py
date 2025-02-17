@@ -6,7 +6,7 @@ from descending_drive import cortical_input
 
 
 # Global variable
-T = 800  # Simulation Time [ms]
+T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 NUM_NEURONS = 300  # Number of Neurons simulated
 
@@ -38,7 +38,7 @@ def run_LIF(pars, Iinj, stop=False):
     gain_exc = pars["gain_exc"]
     d_soma = pars["D_soma"]
     doublet_current = pars["Doublet_current"]
-    print(doublet_current)
+    # print(doublet_current)
 
     # Initialize voltage
     v = np.zeros(Lt)
@@ -55,7 +55,9 @@ def run_LIF(pars, Iinj, stop=False):
     # Loop over time
     rec_spikes = []  # record spike times
     tr = 0.0  # the count for refractory duration
-    doub = 0  # was previous spike a doublet 0 = no, 1 = yes
+    doub = 0  # last spike doublet = 1, else = 0
+    doub_time = -200 / DT  # time stamp for latest doublet
+    doub_count = 0
 
     for it in range(Lt - 1):
 
@@ -65,22 +67,20 @@ def run_LIF(pars, Iinj, stop=False):
 
         elif v[it] >= V_th:  # if voltage over threshold
             rec_spikes.append(it)  # record spike event
-            recent_pulse = 1  # spike recorded
+            doub = 0
+
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
 
-        # Calculate renshaw feedback, sudden increase in current should allow doublet in larger cells
-        # inversely related to soma size.
-        di = Iinj[it + 1] - Iinj[it]
-        renshaw = di * 1e2 / d_soma
-
-        # Joe fucking about
-        if Iinj[it] >= doublet_current and tr == 0 and doub < 1:
+        elif Iinj[it] >= doublet_current and (it - doub_time) > (200 / DT) and doub < 1:
             rec_spikes.append(it)  # record spike event
-            recent_pulse = 1  # spike recorded
-            doub = 1  # first spike
+            doub = 1
+            doub_time = it
+
+            v[it - 1] = V_th + 20
             v[it] = V_reset  # reset voltage
             tr = tref * 2 / DT  # set refractory time
+            doub_count += 1
 
         # Calculate the increment of the membrane potential
         dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
@@ -92,6 +92,7 @@ def run_LIF(pars, Iinj, stop=False):
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * DT
+    print(doub_count)
 
     return v, rec_spikes
 
@@ -381,7 +382,7 @@ def _main():
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 5)
     # time = np.linspace(0, T_dur, int(T / DT))
     # Output_plot(CI, pars_dict, neurons=[5])
     Freq_plot(CI, pars_dict, neurons=[5, 50, 200])
