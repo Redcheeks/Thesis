@@ -144,17 +144,15 @@ def cortical_input(
 
 def _main():
     # Example Usage
-    T_dur = 1000  # Total time in ms
+    T_dur = 10000  # Total time in ms
     dt = 1  # Time step in ms
     n_mn = 300  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 50  # Max input current (nA)
-    CCoV = 10  # Common noise CoV (%)
+    max_I = 10  # Max input current (nA)
+    CCoV = 20  # Common noise CoV (%)
     ICoV = 1  # Independent noise CoV (%)
 
-    CI = cortical_input(
-        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 0.01
-    )
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 0.01)
 
     # Plot the first motor neuron's cortical input
     plt.figure(1, figsize=(8, 6))
@@ -162,7 +160,9 @@ def _main():
     for i in range(5):  # Plot first 5 neurons
         plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
 
-    plt.xlabel("Time (s)")
+    plt.plot(time, CI[:, 100], label=f"Neuron {100}")
+    plt.plot(time, CI[:, 200], label=f"Neuron {200}")
+    plt.xlabel("Time (ms)")
     plt.ylabel("Current (nA)")
     plt.title("Cortical Input for Multiple Neurons")
 
@@ -175,6 +175,8 @@ def _main():
 
     mean_activity = CI.mean(axis=0)  # Mean cortical input per neuron
     std_activity = CI.std(axis=0)  # Standard deviation per neuron
+
+    print(std_activity / mean_activity)
 
     # print("Mean cortical input per neuron:")S
     # print(mean_activity)
