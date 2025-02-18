@@ -55,15 +55,17 @@ def run_LIF(pars, Iinj, stop=False):
     # Loop over time
     rec_spikes = []  # record spike times
     tr = 0.0  # the count for refractory duration
-    doub = 1  # last spike doublet = 1, else = 0
-    doub_possible = True
-    relax_counter = 200 / DT
+    last_spike_counter = (
+        100 / DT
+    )  # time since spike, used for doublet interval (3-10ms).
+    renshaw_inhib = False  # is renshaw cell inhibiting
+    relax_counter = 200 / DT  # used to check for relaxation period for renshaw state.
     doub_count = 0
 
     for it in range(Lt - 1):
 
         if relax_counter > 100 / DT:
-            doub_possible = True
+            renshaw_inhib = False
 
         if tr > 0:  # check if in refractory period
             v[it] = V_reset  # set voltage to reset
@@ -71,20 +73,30 @@ def run_LIF(pars, Iinj, stop=False):
 
         elif v[it] >= V_th:  # if voltage over threshold
             rec_spikes.append(it)  # record spike event
-            doub = 0
+            last_spike_counter = 0.0
+
+            if (
+                relax_counter > 100 / DT
+            ):  # check if neuron was relaxed prior to this spike
+                renshaw_inhib = False
+            else:
+                renshaw_inhib = True
+
             relax_counter = 0.0
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
 
-        elif Iinj[it] >= doublet_current and doub_possible and doub < 1:
+        elif (
+            renshaw_inhib == False  # renshaw cell is not in inhibition state
+            and (3 / DT) < last_spike_counter < (10 / DT)  # doublet interval
+            and Iinj[it] >= doublet_current  # current threshold
+        ):
             rec_spikes.append(it)  # record spike event
-            doub = 1
-            doub_time = it
             relax_counter = 0.0
-            doub_possible = False
-            v[it - 1] = V_th + 20
+            renshaw_inhib = True
+            v[it - 1] = V_th + 20  ##ONLY FOR MAKING SPIKES MORE VISIBLE!!
             v[it] = V_reset  # reset voltage
-            tr = tref * 2 / DT  # set refractory time
+            tr = tref * 2 / DT  # set new refractory time : double normal time.
             doub_count += 1
 
         # Calculate the increment of the membrane potential
@@ -95,6 +107,7 @@ def run_LIF(pars, Iinj, stop=False):
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
         relax_counter += 1
+        last_spike_counter += 1
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * DT
@@ -388,11 +401,11 @@ def _main():
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 5)
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 5)
     # time = np.linspace(0, T_dur, int(T / DT))
     # Output_plot(CI, pars_dict, neurons=[5])
-    Freq_plot(CI, pars_dict, neurons=[5, 50, 200])
-    Output_plot(CI, pars_dict, neurons=[5, 50, 200])
+    Freq_plot(CI, pars_dict, neurons=[50, 200])
+    Output_plot(CI, pars_dict, neurons=[50, 200])
     plt.show()
 
 
