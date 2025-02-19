@@ -23,7 +23,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
 
     leak_array = np.linspace(0.25, 0.15, NUM_NEURONS)
     doublet_currents = np.linspace(
-        1, 1, NUM_NEURONS
+        3.4, 2.1, NUM_NEURONS
     )  # coefficients for producing doublets
 
     # Define the refractory period (assumed to be 2 ms for all neurons)
@@ -37,7 +37,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
 
         # Calculate dependent parameters using empirical relationships
         S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
-        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
+        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52) / 10  # Rheobase current [A]
         Doublet_current_unit = (
             I_th_unit * doublet_currents[i]
         )  # Doublet current threshold [A]
