@@ -109,6 +109,6 @@ def run_LIF(pars, Iinj, stop=False):
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * DT
-    print(doub_count)
+    # print(doub_count)
 
     return v, rec_spikes
