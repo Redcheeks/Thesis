@@ -57,12 +57,15 @@ def run_LIF(pars, Iinj, stop=False):
         100 / DT
     )  # time since spike, used for doublet interval (3-10ms).
     renshaw_inhib = False  # is renshaw cell inhibiting
-    relax_counter = 200 / DT  # used to check for relaxation period for renshaw state.
+    renshaw_reset = 400 / DT
+    relax_counter = (
+        renshaw_reset  # used to check for relaxation period for renshaw state.
+    )
     doub_count = 0
 
     for it in range(Lt - 1):
 
-        if relax_counter > 100 / DT:
+        if relax_counter > renshaw_reset:
             renshaw_inhib = False
 
         if tr > 0:  # check if in refractory period
@@ -74,7 +77,7 @@ def run_LIF(pars, Iinj, stop=False):
             last_spike_counter = 0.0
 
             if (
-                relax_counter > 100 / DT
+                relax_counter > renshaw_reset
             ):  # check if neuron was relaxed prior to this spike
                 renshaw_inhib = False
             else:
@@ -98,9 +101,14 @@ def run_LIF(pars, Iinj, stop=False):
             doub_count += 1
 
         # Calculate the increment of the membrane potential
-        dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
-            DT / tau_m
-        )
+        if renshaw_inhib == False:
+            dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
+                DT / tau_m
+            )
+        else:
+            dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
+                DT / tau_m
+            )
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv

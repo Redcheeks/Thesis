@@ -205,22 +205,22 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 100  # Max input current (nA)
+    max_I = 17  # Max input current (nA)
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
     ## RUN PARAMETERS ##
     run_model = run_model1
-    neurons = [150, 200]
+    neurons = [1, 50, 150, 200]
     # pars_dict[5]["doublet_current"]
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 2)
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 5)
     # time = np.linspace(0, T_dur, int(T / DT))
-    # Output_plot(CI, pars_dict, neurons=[5])
-    # Freq_plot(CI, pars_dict, neurons=[1, 5, 20, 50, 150, 200, 250])
-    plt.plot(CI[: int(T / DT), neurons])
     Output_plot(CI, pars_dict, run_model, neurons)
-    # F_I_plot(pars_dict, Imin=1, Imax=50, n_samples=50, neurons=[1, 5, 50, 150, 200, 275])
+    Freq_inst_plot(CI, pars_dict, run_model, neurons)
+    # plt.plot(CI[: int(T / DT), neurons])
+    # Output_plot(CI, pars_dict, run_model, neurons)
+    F_I_plot(pars_dict, Imin=1, Imax=50, n_samples=50, neurons=neurons)
     plt.show()
 
 
