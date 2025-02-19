@@ -1,5 +1,7 @@
 import numpy as np
 
+##MODEL BASED ON RHEBASE CURRENT LIMIT##
+
 
 # Global variable
 T = 1000  # Simulation Time [ms]
