@@ -60,10 +60,10 @@ def run_LIF(pars, Iinj, stop=False):
     relax_counter = 200 / DT  # used to check for relaxation period for renshaw state.
 
     # excitability parameter that effects dv increase.
-    max_exc = gain_exc * 2
+    max_exc = gain_exc * 10
     excitability = max_exc  # start with high excitability
     depression_reset = (
-        100
+        200
         / DT  # 100ms for depression to wear off? (this should be based on literature)
     )
     # TODO: spiking should decrease excitability.
@@ -77,7 +77,6 @@ def run_LIF(pars, Iinj, stop=False):
         # TODO : this maybe should be separate????
         if relax_counter > 100 / DT:  # Check if in relaxed state for renshaw
             renshaw_inhib = False
-            excitability = max_exc
 
         if tr > 0:  # check if in refractory period
             v[it] = V_reset  # set voltage to reset
@@ -92,14 +91,16 @@ def run_LIF(pars, Iinj, stop=False):
                 renshaw_inhib = False
             else:
                 renshaw_inhib = True
+                excitability = gain_exc  # standard depression?
 
-            if (3 / DT) < last_spike_counter < (10 / DT) and renshaw_inhib == False:
+            if (tref / DT) < last_spike_counter < (10 / DT):
                 v[it - 1] = V_th + 20  ##ONLY FOR MAKING DOUBLET SPIKES MORE VISIBLE!!
                 tr = tref * 2 / DT  # set new refractory time : double normal time.
                 doub_count += 1
-                excitability = gain_exc * 0.8  # if this is a doublet, more depression??
+                excitability = (
+                    gain_exc * 0.8
+                )  # if this is a doublet, more depression than normal??s
             else:
-                excitability = gain_exc
                 tr = tref / DT  # set refractory time
 
             last_spike_counter = 0.0
@@ -118,7 +119,7 @@ def run_LIF(pars, Iinj, stop=False):
         last_spike_counter += 1
         # depression wears off
         if excitability < max_exc:
-            excitability += (
+            excitability += max_exc * (
                 DT / depression_reset
             )  # After reset time the excitability should reset
 
