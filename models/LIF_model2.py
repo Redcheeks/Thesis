@@ -58,12 +58,19 @@ def run_LIF(pars, Iinj, stop=False):
     )  # time since spike, used for doublet interval (3-10ms).
     renshaw_inhib = False  # is renshaw cell inhibiting
     relax_counter = 200 / DT  # used to check for relaxation period for renshaw state.
-    doub_count = 0
+
+    excitability = 5  # start with max excitability
+    depression_reset = 100  # 100ms for depression to wear off? (this can )
+
+    doub_count = 0  # For testing purposes
 
     for it in range(Lt - 1):
 
-        if relax_counter > 100 / DT:
+        if relax_counter > 100 / DT:  # Check if in relaxed state for renshaw
             renshaw_inhib = False
+        # TODO : this maybe should be separate????
+        #  excitability = 1  # max excitability when relaxed
+        # TODO: here we should have increased excitability!!
 
         if tr > 0:  # check if in refractory period
             v[it] = V_reset  # set voltage to reset
@@ -73,39 +80,39 @@ def run_LIF(pars, Iinj, stop=False):
             rec_spikes.append(it)  # record spike event
             last_spike_counter = 0.0
 
-            if (
-                relax_counter > 100 / DT
-            ):  # check if neuron was relaxed prior to this spike
-                renshaw_inhib = False
-            else:
-                renshaw_inhib = True
+            if (3 / DT) < last_spike_counter < (10 / DT):
+                v[it - 1] = V_th + 20  ##ONLY FOR MAKING DOUBLET SPIKES MORE VISIBLE!!
+                # tr = tref * 2 / DT  # set new refractory time : double normal time.
+                doub_count += 1
+
+            excitability -= 1
+            # if (
+            #     relax_counter > 100 / DT
+            # ):  # check if neuron was relaxed prior to this spike
+            #     renshaw_inhib = False
+            # else:
+            #     renshaw_inhib = True
 
             relax_counter = 0.0
             v[it] = V_reset  # reset voltage
             tr = tref / DT  # set refractory time
+            # TODO: spiking should decrease excitability. this effect should wear off over time, a new spike increases it again though (many spikes quickly following eachother makes a very decreased excitability)
 
-        elif (
-            renshaw_inhib == False  # renshaw cell is not in inhibition state
-            and (3 / DT) < last_spike_counter < (10 / DT)  # doublet interval
-            and Iinj[it] >= doublet_current  # current threshold
-        ):
-            rec_spikes.append(it)  # record spike event
-            relax_counter = 0.0
-            renshaw_inhib = True
-            v[it - 1] = V_th + 20  ##ONLY FOR MAKING SPIKES MORE VISIBLE!!
-            v[it] = V_reset  # reset voltage
-            tr = tref * 2 / DT  # set new refractory time : double normal time.
-            doub_count += 1
+        # Calculate the increment of the membrane potential with variable gains
 
-        # Calculate the increment of the membrane potential
-        dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
-            DT / tau_m
-        )
+        dv = (
+            -(gain_leak) * (v[it] - E_L) + (gain_exc * excitability) * (Iinj[it] * R_m)
+        ) * (DT / tau_m)
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
         relax_counter += 1
         last_spike_counter += 1
+        # depression wears off
+        if excitability < 5:
+            excitability += (
+                DT / depression_reset
+            )  # After reset time the effect should be 0.
 
     # Get spike times in ms
     rec_spikes = np.array(rec_spikes) * DT
