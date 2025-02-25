@@ -101,7 +101,7 @@ def _main():
     dt = DT  # Time step in ms
     n_mn = NUM_NEURONS  # Number of motor neurons
     n_clust = 5  # Number of clusters
-    max_I = 17  # Max input current (nA)
+    max_I = 50  # Max input current (nA)
     CCoV = 0  # Common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
 
@@ -109,7 +109,7 @@ def _main():
 
     run_model = run_model2  ## SELECT THE MODEL TO RUN!!
 
-    neurons = [1, 50, 150, 200]  ## SELECT WHICH NEURONS TO RUN & PLOT
+    neurons = [1, 50]  ## SELECT WHICH NEURONS TO RUN & PLOT
 
     # pars_dict[5]["doublet_current"]
 
