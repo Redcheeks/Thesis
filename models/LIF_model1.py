@@ -61,7 +61,7 @@ def run_LIF(pars, Iinj, stop=False):
     relax_counter = (
         renshaw_reset  # used to check for relaxation period for renshaw state.
     )
-    doub_count = 0
+    doub_count = 0  # For testing purposes
 
     for it in range(Lt - 1):
 
@@ -101,14 +101,9 @@ def run_LIF(pars, Iinj, stop=False):
             doub_count += 1
 
         # Calculate the increment of the membrane potential
-        if renshaw_inhib == False:
-            dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
-                DT / tau_m
-            )
-        else:
-            dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
-                DT / tau_m
-            )
+        dv = (-(gain_leak) * (v[it] - E_L) + (gain_exc) * (Iinj[it] * R_m)) * (
+            DT / tau_m
+        )
 
         # Update the membrane potential [mv]
         v[it + 1] = v[it] + dv
