@@ -32,8 +32,12 @@ def F_I_plot(
         for i in I_range:
 
             v, sp = run_LIF(pars_dict[neuron], Iinj=i, stop=True)
+
             if sp.size > 1:
-                freq.append(1e3 / np.mean(np.diff(sp)))
+                isi = np.diff(sp * 1e-3)  # Compute interspike intervals, time in ms
+                # Assign frequency values to corresponding spike times (excluding the first spike)
+                freq.append(np.mean((1 / isi[1:])))  # First spike has no frequency
+
             else:
                 freq.append(0)
         line = ax.plot(I_range, freq)
@@ -102,8 +106,11 @@ def _main():
     ICoV = 0  # Independent noise CoV (%)
 
     ## RUN PARAMETERS ##
-    run_model = run_model1
-    neurons = [1, 50, 150, 200]
+
+    run_model = run_model2  ## SELECT THE MODEL TO RUN!!
+
+    neurons = [1, 50, 150, 200]  ## SELECT WHICH NEURONS TO RUN & PLOT
+
     # pars_dict[5]["doublet_current"]
 
     CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", 5)
