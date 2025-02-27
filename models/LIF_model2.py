@@ -60,10 +60,10 @@ def run_LIF(pars, Iinj, stop=False):
     relax_counter = 200 / DT  # used to check for relaxation period for renshaw state.
 
     # excitability parameter that effects dv increase.
-    max_exc = gain_exc * 10
+    max_exc = 1
     excitability = max_exc  # start with high excitability
     depression_reset = (
-        200
+        250
         / DT  # 100ms for depression to wear off? (this should be based on literature)
     )
     # TODO: spiking should decrease excitability.
@@ -91,7 +91,7 @@ def run_LIF(pars, Iinj, stop=False):
                 renshaw_inhib = False
             else:
                 renshaw_inhib = True
-                excitability = gain_exc  # standard depression?
+                excitability -= 0.1  # standard depression?
 
             if (tref / DT) < last_spike_counter < (10 / DT):
                 v[it - 1] = V_th + 20  ##ONLY FOR MAKING DOUBLET SPIKES MORE VISIBLE!!
