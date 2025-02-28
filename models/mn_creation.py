@@ -37,7 +37,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
 
         # Calculate dependent parameters using empirical relationships
         S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
-        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52) / 5  # Rheobase current [A]
+        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
         Doublet_current_unit = (
             I_th_unit * doublet_currents[i]
         )  # Doublet current threshold [A]
@@ -61,6 +61,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         tau = tau_unit * 1e3  # Membrane time constant [ms]
         t_ref = t_ref_unit * 1e3  # (Refractory time) in [ms]
         D_soma = D_soma_unit * 1e6  # Soma diameter in [μm]
+        S_soma = S_unit * 1e6
 
         # Calculate leak conductance (g_L = C / tau or 1 / R)
         g_L = 1 / R * 10  # in μS (since C is in nF and tau is in ms)
@@ -79,6 +80,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
             {
                 "number": i,
                 "D_soma": D_soma,
+                "S_soma": S_soma,
                 "R": R,  # Input resistance [MΩ]
                 "C": C,  # Membrane capacitance [nF]
                 "tau_m": tau,  # Membrane time constant [ms]
