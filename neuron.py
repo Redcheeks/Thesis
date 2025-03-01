@@ -138,16 +138,15 @@ class NeuronFactory:
         """Create a neuron pool for a number of neurons"""
 
         soma_diameters = soma_diameter_vector(total_neurons=number_of_neurons)
-        neuron_list = [Neuron]
 
-        for i in range(number_of_neurons):
-            neuron_list.append(
-                NeuronFactory.create_neuron(
-                    soma_diameter=soma_diameters[i],
-                    number=i,
-                    num_total_neurons=number_of_neurons,
-                )
+        neuron_list = [
+            NeuronFactory.create_neuron(
+                soma_diameter=soma_diameter,
+                number=i,
+                num_total_neurons=number_of_neurons,
             )
+            for i, soma_diameter in enumerate(soma_diameters)
+        ]
 
         return neuron_list
 

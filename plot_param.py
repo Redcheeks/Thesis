@@ -1,23 +1,27 @@
-from models.mn_creation import caillet_quadratic
-import numpy as np
+from dataclasses import asdict
 import matplotlib.pyplot as plt
+import numpy as np
+from neuron import NeuronFactory, Neuron
+
+# from models.mn_creation import caillet_quadratic
 
 # Global variable
-T = 1000  # Simulation Time [ms]
-DT = 0.1  # Time step in [ms]
+# T = 1000  # Simulation Time [ms]
+# DT = 0.1  # Time step in [ms]
 NUM_NEURONS = 300  # Number of Neurons simulated
 
 
 def _main():
 
-    pars_dict = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
+    # neuron_pool_list = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
+    neuron_pool_list = NeuronFactory.create_neuron_pool(NUM_NEURONS)
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
     ## PLOT I_rheobase vs R
     ax1.plot(
-        [item["R"] for item in pars_dict],
-        [item["I_th"] for item in pars_dict],
+        [item.R_Mohm for item in neuron_pool_list],
+        [item.I_rheobase for item in neuron_pool_list],
         "b",
     )
     # for i in pars_dict:
@@ -33,7 +37,9 @@ def _main():
     ## PLOT tau vs R
 
     ax2.plot(
-        [item["R"] for item in pars_dict], [item["tau_m"] for item in pars_dict], "k"
+        [item.R_Mohm for item in neuron_pool_list],
+        [item.tau_ms for item in neuron_pool_list],
+        "k",
     )
     ax2.set_xlabel("R [MΩ]")
     ax2.set_ylabel("τ [ms]")
@@ -42,16 +48,16 @@ def _main():
 
     ## PLOT S_soma vs R
 
-    for i in pars_dict:
+    for i in neuron_pool_list:
         ax3.plot(
-            [item["R"] for item in pars_dict],
-            [item["S_soma"] for item in pars_dict],
+            [item.R_Mohm for item in neuron_pool_list],
+            [item.D_soma for item in neuron_pool_list],
             "k",
         )
     ax3.set_xlabel("R [MΩ]")
-    ax3.set_ylabel("S_soma [m * 10^(-6)]")
+    ax3.set_ylabel("D_soma [(μm)]")
     # ax.set_ylim([-80, -40])
-    ax3.set_title("S_soma - R ")
+    ax3.set_title("D_soma - R ")
 
     plt.subplots_adjust(hspace=0.5)
     plt.show()
