@@ -103,7 +103,7 @@ class Neuron:
     def g_L(self) -> np.float64:
         """Leak conductance  micro_Siemens"""
         # (g_L = C / tau or 1 / R)
-        return 1 / self.R_Mohm  # Leak Conductance [μS]
+        return 1 / self.R_Mohm * 10  # Leak Conductance [μS]
 
 
 class NeuronFactory:
