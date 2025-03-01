@@ -111,8 +111,6 @@ def _main():
 
     neurons = [1, 50, 150, 200, 250]  ## SELECT WHICH NEURONS TO RUN & PLOT
 
-    pars_dict[1]["I_th"]
-
     CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "sinusoid.hz", 2)
 
     # time = np.linspace(0, T_dur, int(T / DT))

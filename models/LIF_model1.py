@@ -9,7 +9,7 @@ DT = 0.1  # Time step in [ms]
 NUM_NEURONS = 300  # Number of Neurons simulated
 
 
-def run_LIF(pars, Iinj, stop=False):
+def run_LIF(pars, Iinj, DC=False):
     """
     Simulate the LIF dynamics with external input current
 
@@ -46,7 +46,7 @@ def run_LIF(pars, Iinj, stop=False):
     Iinj = Iinj * np.ones(Lt)
 
     # If current pulse, set beginning and end to 0
-    if stop:
+    if DC:
         Iinj[: int(len(Iinj) / 2) - 1000] = 0
         Iinj[int(len(Iinj) / 2) + 1000 :] = 0
 
