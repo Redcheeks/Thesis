@@ -107,8 +107,7 @@ class NeuronFactory:
 
     @staticmethod
     def create_neuron(
-        soma_surface_area: np.float,
-        soma_diameter: np.float,  # TODO We can probably remove this or surface area, only need one!!
+        soma_diameter: np.float,
         number: int,
         num_total_neurons: int,  # Needed for rheobase threshold coefficients
     ) -> Neuron:
@@ -133,12 +132,14 @@ class NeuronFactory:
 
 
 def soma_diameter_vector(
-    soma_Dmin_m=SOMA_DIAM_MIN_METER, soma_Dmax_m=SOMA_DIAM_MAX_METER, len=300
+    soma_Dmin_m=SOMA_DIAM_MIN_METER, soma_Dmax_m=SOMA_DIAM_MAX_METER, total_neurons=300
 ):
     """Generate vector of soma diameter [m] and soma surface areas [m^2]"""
 
-    i_values = np.linspace(0, len, len) / len  # Normalized indices [0..1]
-    soma_diam_m_vec_1 = np.linspace(soma_Dmin_m, soma_Dmax_m, len)
+    i_values = (
+        np.linspace(0, total_neurons, total_neurons) / total_neurons
+    )  # Normalized indices [0..1]
+    # soma_diam_m_vec_1 = np.linspace(soma_Dmin_m, soma_Dmax_m, total_neurons)
     soma_diam_m_vec_2 = soma_Dmin_m + (i_values**2) * (soma_Dmax_m - soma_Dmin_m)
 
     return soma_diam_m_vec_2
