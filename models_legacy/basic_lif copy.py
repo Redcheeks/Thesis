@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-from simple_inputs import trapez_current, linear_spiking_current
+from scripts.simple_inputs import trapez_current, linear_spiking_current
 from descending_drive import cortical_input
 
 

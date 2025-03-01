@@ -1,11 +1,11 @@
 import unittest
 import numpy as np
-from models.mn_creation import caillet_quadratic
+from models_legacy.mn_creation import caillet_quadratic
 from neuron import NeuronFactory, soma_diameter_vector
 from descending_drive import cortical_input
-from models.LIF_model1 import run_LIF as run_model1
+from models_legacy.LIF_model1 import run_LIF as run_model1
 from simulation.models.LIF_model1 import LIF_Model1
-from models.LIF_model2 import run_LIF as run_model2
+from models_legacy.LIF_model2 import run_LIF as run_model2
 
 # Import original and refactored functions
 # from original_module import (

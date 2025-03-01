@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from models.mn_creation import caillet_quadratic
+from models_legacy.mn_creation import caillet_quadratic
 from neuron import NeuronFactory, soma_diameter_vector
 
 # Import original and refactored functions

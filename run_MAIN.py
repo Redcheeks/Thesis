@@ -4,9 +4,9 @@ from matplotlib.widgets import Slider
 
 # from simple_inputs import trapez_current, linear_spiking_current
 from descending_drive import cortical_input
-from models.LIF_model1 import run_LIF as run_model1
-from models.LIF_model2 import run_LIF as run_model2
-from models.mn_creation import caillet_quadratic
+from models_legacy.LIF_model1 import run_LIF as run_model1
+from models_legacy.LIF_model2 import run_LIF as run_model2
+from models_legacy.mn_creation import caillet_quadratic
 
 # Global variable
 T = 1000  # Simulation Time [ms]
