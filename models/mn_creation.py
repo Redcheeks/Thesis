@@ -61,7 +61,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         tau = tau_unit * 1e3  # Membrane time constant [ms]
         t_ref = t_ref_unit * 1e3  # (Refractory time) in [ms]
         D_soma = D_soma_unit * 1e6  # Soma diameter in [μm]
-        S_soma = S_unit * 1e6
+        S_soma = S_unit * 1e12
 
         # Calculate leak conductance (g_L = C / tau or 1 / R)
         g_L = 1 / R * 10  # in μS (since C is in nF and tau is in ms)
