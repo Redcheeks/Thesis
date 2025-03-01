@@ -2,5 +2,14 @@
     "editor.formatOnSave": true,
     "python.terminal.launchArgs": [
         "${workspaceFolder}/run_MAIN.py"
-    ]
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }
