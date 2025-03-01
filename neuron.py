@@ -25,14 +25,14 @@ class Neuron:
     E_L_mV: np.float
     # TODO Write in thesis how unrealistic these arbitrary linear distributions are.
     doublet_rheobase_coefficient: np.float  # Rheobase coefficient for doublet threshold
-    leak_array_coefficient: np.float  # Leakage coefficient
-    gain_leak: np.float = leak_array_coefficient
-    gain_exc: np.float = leak_array_coefficient
+
+    gain_leak: np.float
+    gain_exc: np.float
 
     @property
     def D_soma(self) -> np.float:
         """Soma diameter in [μm]"""
-        return self.D_soma_unit * 1e6  # Soma diameter in [μm]
+        return self.D_soma_meter * 1e6  # Soma diameter in [μm]
 
     @property
     def S_soma_meter(self) -> np.float:
@@ -113,16 +113,16 @@ class NeuronFactory:
         num_total_neurons: int,  # Needed for rheobase threshold coefficients
     ) -> Neuron:
         """Create parameters for a single neuron based on soma surface area"""
-
+        leak_coefficient = np.linspace(0.25, 0.15, num_total_neurons)[
+            number
+        ]  # Leakage coefficient
         return Neuron(
             number=number,
-            S_soma_meter=soma_surface_area,
             doublet_rheobase_coefficient=np.linspace(3.4, 2.1, num_total_neurons)[
                 number
             ],  # Rheobase threshold coefficient
-            leak_array_coefficient=np.linspace(0.25, 0.15, num_total_neurons)[
-                number
-            ],  # Leakage coefficient
+            gain_exc=leak_coefficient,
+            gain_leak=leak_coefficient,
             D_soma_meter=soma_diameter,
             V_rest_mV=V_REST,  # Resting potential [mV]
             V_th_mV=V_THRESHOLD,  # Threshold potential [mV]
@@ -132,7 +132,7 @@ class NeuronFactory:
         )
 
 
-def soma_area_vector(
+def soma_diameter_vector(
     soma_Dmin_m=SOMA_DIAM_MIN_METER, soma_Dmax_m=SOMA_DIAM_MAX_METER, len=300
 ):
     """Generate vector of soma diameter [m] and soma surface areas [m^2]"""
@@ -141,18 +141,16 @@ def soma_area_vector(
     soma_diam_m_vec_1 = np.linspace(soma_Dmin_m, soma_Dmax_m, len)
     soma_diam_m_vec_2 = soma_Dmin_m + (i_values**2) * (soma_Dmax_m - soma_Dmin_m)
 
-    return soma_diam_m_vec_2, soma_surface_area_m2(
-        soma_diam_m_vec_2
-    )  # TODO We only need one but undecided which one!
+    return soma_diam_m_vec_2
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    len = 300
-    d_vector, s_vector = soma_area_vector()
+#     len = 300
+#     d_vector, s_vector = soma_diameter_vector()
 
-    a = Neuron(name="Kim", size=5)
-    print(a)
+#     # a = Neuron(name="Kim", size=5)
+#     # print(a)
 
-    a.size = 30
-    print(a)
+#     # a.size = 30
+#     # print(a)
