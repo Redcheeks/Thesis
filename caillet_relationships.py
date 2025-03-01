@@ -5,20 +5,24 @@ import matplotlib.pyplot as plt
 ## https://doi.org/10.7554/eLife.76489
 ## Values extracted with help of Chatgpt but manually checked and corrected
 
-
+# Caillet 2022 Github, some values are from here and are not rounded
 # https://github.com/ArnaultCAILLET/Caillet-et-al-2022-PLOS_Comput_Biol/blob/main/MN_properties_relationships_MOD.py
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Number of motoneurons
+# Number of motoneurons - TODO This may be some type of input to a generating function?
 num_neurons = 300
 # Generate normalized indices
 i_values = np.linspace(0, num_neurons, num_neurons) / num_neurons
 
-soma_Dmin = 50e-6  # minimum soma diameter in meter
-soma_Dmax = 100e-6  # maximum soma diameter in meter
+soma_Dmin = (
+    50e-6  # minimum soma diameter in meter, - TODO input to a generating function?
+)
+soma_Dmax = (
+    100e-6  # maximum soma diameter in meter, - TODO input to a generating function?
+)
 
 
 # OPTION 1: Generate a range of soma sizes (S) in [meters]
