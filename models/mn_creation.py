@@ -22,7 +22,7 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
     soma_diameters = soma_Dmin + (i_values**2) * (soma_Dmax - soma_Dmin)
 
     leak_array = np.linspace(0.25, 0.15, NUM_NEURONS)
-    doublet_currents = np.linspace(
+    doublet_currents_coefficient = np.linspace(
         3.4, 2.1, NUM_NEURONS
     )  # coefficients for producing doublets
 
@@ -37,9 +37,9 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
 
         # Calculate dependent parameters using empirical relationships
         S_unit = 5.5e-3 * D_soma_unit  # (Neuron surface area) in square meters [m^2]
-        I_th_unit = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
-        Doublet_current_unit = (
-            I_th_unit * doublet_currents[i]
+        I_Rheobase_Ampere = 7.8e2 * np.pow(D_soma_unit, 2.52)  # Rheobase current [A]
+        Doublet_current_Ampere = (
+            I_Rheobase_Ampere * doublet_currents_coefficient[i]
         )  # Doublet current threshold [A]
         R_unit = 1.68e-10 * np.pow(S_unit, -2.43)  # Input resistance [Ω]
         C_unit = 7.9e-5 * D_soma_unit  # Membrane capacitance [F]
@@ -54,8 +54,8 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         )  # (Refractory time) in [s]
 
         # adjust units
-        I_th = I_th_unit * 1e9  # Rheobase current [nA]
-        Doublet_Current = Doublet_current_unit * 1e9  # Double current threshold [nA]
+        I_th = I_Rheobase_Ampere * 1e9  # Rheobase current [nA]
+        Doublet_Current = Doublet_current_Ampere * 1e9  # Double current threshold [nA]
         R = R_unit * 1e-6  # Input resistance [MΩ]
         C = C_unit * 1e9  # Membrane capacitance [nF]
         tau = tau_unit * 1e3  # Membrane time constant [ms]
