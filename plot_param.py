@@ -15,17 +15,26 @@ def _main():
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
     ## PLOT I_rheobase vs R
-    for i in pars_dict:
-        ax1.plot(pars_dict[i]["R"], pars_dict[i]["I_th"], "k.")
+    ax1.plot(
+        [item["R"] for item in pars_dict],
+        [item["I_th"] for item in pars_dict],
+        "b",
+    )
+    # for i in pars_dict:
+    #     ax1.plot(pars_dict[i]["R"], pars_dict[i]["I_th"], "k.")
     ax1.set_xlabel("R [MΩ]")
     ax1.set_ylabel("I_th (Rheobase) [nA]")
     # ax.set_ylim([-80, -40])
     ax1.set_title("I_th - R ")
 
+    # pars_dict[i]["R"]
+    # [item["R"] for item in pars_dict]
+
     ## PLOT tau vs R
 
-    for i in pars_dict:
-        ax2.plot(pars_dict[i]["R"], pars_dict[i]["tau_m"], "k.")
+    ax2.plot(
+        [item["R"] for item in pars_dict], [item["tau_m"] for item in pars_dict], "k"
+    )
     ax2.set_xlabel("R [MΩ]")
     ax2.set_ylabel("τ [ms]")
     # ax.set_ylim([-80, -40])
@@ -34,7 +43,11 @@ def _main():
     ## PLOT S_soma vs R
 
     for i in pars_dict:
-        ax3.plot(pars_dict[i]["R"], pars_dict[i]["S_soma"], "k.")
+        ax3.plot(
+            [item["R"] for item in pars_dict],
+            [item["S_soma"] for item in pars_dict],
+            "k",
+        )
     ax3.set_xlabel("R [MΩ]")
     ax3.set_ylabel("S_soma [m * 10^(-6)]")
     # ax.set_ylim([-80, -40])

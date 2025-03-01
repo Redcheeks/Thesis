@@ -104,6 +104,6 @@ def caillet_quadratic(T=T, dt=DT, num_neurons=NUM_NEURONS):
         )
 
     # Convert the sorted list to a dictionary for compatibility
-    pars = {i: neuron_list[i] for i in range(num_neurons)}
+    # pars = {i: neuron_list[i] for i in range(num_neurons)}
 
-    return pars
+    return neuron_list
