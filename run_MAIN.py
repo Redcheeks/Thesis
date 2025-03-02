@@ -124,3 +124,8 @@ def _main():
 
 if __name__ == "__main__":
     _main()
+
+
+## Can edit settings.json to make this one always be the one running with:
+
+# "python.terminal.launchArgs": [    "${workspaceFolder}/run_MAIN.py"],
