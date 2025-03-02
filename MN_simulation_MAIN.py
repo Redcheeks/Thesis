@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters.
@@ -10,7 +10,7 @@ T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 
 
-def Output_plots(CI: np.array, simulation_data: List):
+def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron, []]]):
     """Produces a membrane potential - Time plot for the given simulation results."""
 
     time = np.linspace(0, np.shape(CI)[0], np.shape(CI)[0])
@@ -28,7 +28,7 @@ def Output_plots(CI: np.array, simulation_data: List):
     ax.axhline(
         simulation_data[0][0].V_th_mV, color="k", ls="--"
     )  # gets the first neurons threshold level
-    ax.legend()
+    ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
 
 
 def _main():
