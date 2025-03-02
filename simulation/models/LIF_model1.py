@@ -25,20 +25,6 @@ class LIF_Model1(TimestepSimulation):
         rec_sp     : spike times
         """
 
-        # Set parameters
-        # V_th, V_reset = pars["V_th"], pars["V_reset"]
-        # tau_m, g_L = pars["tau_m"], pars["g_L"]
-        # V_init, E_L = pars["V_init"], pars["E_L"]
-        # R_m = pars["R"]
-        # range_t = pars["range_t"]
-        # Lt = range_t.size
-        # tref = pars["tref"]
-        # gain_leak = pars["gain_leak"]
-        # gain_exc = pars["gain_exc"]
-        # d_soma = pars["D_soma"]
-        # doublet_current = pars["Doublet_current"]
-        # print(doublet_current)
-
         simulation_steps = len(np.arange(0, sim_time, timestep))
 
         # Initialize voltage
