@@ -10,18 +10,14 @@ T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 
 
-def Output_plots(
-    CI,
-    simulation_results,
-    neuron_indexes,
-    neuron_object_list: List[Neuron],
-):  # Neuron_object is only so we can access data to draw the threshold line which is usually identical/constant for all. neurons..
+def Output_plots(CI: np.array, simulation_data: List):
+    """Produces a membrane potential - Time plot for the given simulation results."""
 
     time = np.linspace(0, np.shape(CI)[0], np.shape(CI)[0])
 
     fig, ax = plt.subplots()
-    for i in neuron_indexes:
-        v, sp = simulation_results[i]
+    for neuron_data_pair in simulation_data:
+        v, sp = neuron_data_pair[1]
         if sp.size:
             sp_num = (sp / DT).astype(int) - 1
             v[sp_num] += 20  # draw nicer spikes
@@ -29,8 +25,10 @@ def Output_plots(
         ax.plot(time, v, "-")
 
     ax.set_ylim([-80, -20])
-    ax.axhline(neuron_object_list[1].V_th_mV, color="k", ls="--")
-    ax.legend(neuron_indexes)
+    ax.axhline(
+        simulation_data[0][0].V_th_mV, color="k", ls="--"
+    )  # gets the first neurons threshold level
+    ax.legend()
 
 
 def _main():
@@ -77,17 +75,20 @@ def _main():
 
     # TODO Run simulation for selected neurons with iunput CI (possible make a new method in SIMULATION class to run many simulations?)
 
-    # Create a dictionary of simulation results with neuron_index : (v, sp)
-    simulation_results = {
-        b: LIF_Model1.simulate_neuron(
-            T, DT, neuron=all_neurons[b], Iinj=CI[: int(T / DT), b]
+    # Create a list of (neuron-object , (v, sp) ) data-pairs
+    simulation_results = [
+        (
+            b,
+            LIF_Model1.simulate_neuron(
+                T, DT, neuron=b, Iinj=CI[: int(T / DT), b.number]
+            ),
         )
-        for b in neuron_indexes
-    }
+        for b in neurons_to_simulate
+    ]
 
     # TODO Some Plotting choices
 
-    Output_plots(CI, simulation_results, neuron_indexes, all_neurons)
+    Output_plots(CI, simulation_results)
     plt.show()
 
 
