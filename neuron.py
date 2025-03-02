@@ -28,6 +28,7 @@ class Neuron:
     doublet_rheobase_coefficient: (
         np.float64
     )  # Rheobase coefficient for doublet threshold
+    num_total_neurons: np.float64
 
     gain_leak: np.float64
     gain_exc: np.float64
@@ -71,8 +72,14 @@ class Neuron:
 
     @property
     def I_rheo_ampere(self) -> np.float64:
-        """Rheobase current Ampere"""  # From Caillet table 4
-        return 7.8e2 * np.pow(self.D_soma_meter, 2.52)  # Rheobase current [A]
+        """Rheobase current Ampere"""
+        return 3.85e-9 * np.pow(
+            9.1, np.pow((self.number / self.num_total_neurons), 1.1831)
+        )
+        # OPTION : from Caillet code - Rheobase Distribution
+
+        # ALT OPTION: From Caillet table 4
+        # return 7.8e2 * np.pow(self.D_soma_meter, 2.52)  # Rheobase current [A]
 
     @property
     def I_rheobase(self) -> np.float64:
@@ -131,6 +138,7 @@ class NeuronFactory:
             V_reset_mV=V_RESET,  # Reset potential [mV]
             V_init_mV=V_INIT,  # Initial potential [mV]
             E_L_mV=E_LEAK,  # leak reversal potential [mV]
+            num_total_neurons=num_total_neurons,  # Used for bad rheobase implementation
         )
 
     @staticmethod
@@ -160,7 +168,9 @@ def soma_diameter_vector(
         np.linspace(0, total_neurons, total_neurons) / total_neurons
     )  # Normalized indices [0..1]
     # soma_diam_m_vec_1 = np.linspace(soma_Dmin_m, soma_Dmax_m, total_neurons)
-    soma_diam_m_vec_2 = soma_Dmin_m + (i_values**2) * (soma_Dmax_m - soma_Dmin_m)
+    soma_diam_m_vec_2 = soma_Dmin_m + (i_values**2) * (
+        soma_Dmax_m - soma_Dmin_m
+    )  # quadratic relationship
 
     return soma_diam_m_vec_2
 
