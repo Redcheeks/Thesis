@@ -1,12 +1,9 @@
 {
     "editor.formatOnSave": true,
-    "python.terminal.launchArgs": [
-        "${workspaceFolder}/run_MAIN.py"
-    ],
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        ".",
+        "./tests",
         "-p",
         "test_*.py"
     ],

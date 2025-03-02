@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from neuron import NeuronFactory, Neuron
 
-# from models.mn_creation import caillet_quadratic
+# from models_legacy.mn_creation import caillet_quadratic
 
 # Global variable
 # T = 1000  # Simulation Time [ms]
