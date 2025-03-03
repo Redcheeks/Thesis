@@ -70,16 +70,30 @@ class Neuron:
         )  # 7.9e-5 * D_soma_unit * R_unit  # Membrane time constant [s]
         return tau_unit * 1e3  # Membrane time constant [ms]
 
-    @property
-    def I_rheo_ampere(self) -> np.float64:
-        """Rheobase current Ampere"""
+    @property  # OPTION : from Caillet code - Rheobase Distribution
+    def I_rheo_distr_ampere(self) -> np.float64:
+        """Rheobase current distribution Ampere"""
         return 3.85e-9 * np.pow(
             9.1, np.pow((self.number / self.num_total_neurons), 1.1831)
         )
-        # OPTION : from Caillet code - Rheobase Distribution
+        # Rheobase current [A]
 
-        # ALT OPTION: From Caillet table 4
-        # return 7.8e2 * np.pow(self.D_soma_meter, 2.52)  # Rheobase current [A]
+    @property
+    def I_rheo_distr(self) -> np.float64:
+        """Rheobase current distribution nanoAmpere"""
+        return self.I_rheo_distr_ampere * 1e9  # Rheobase current [nA]
+
+    @property
+    def R_I_Mohm(self) -> np.float64:
+        """Membrane Resistance from Rheobase Currentin Mega_Ohm"""  # From Caillet table 4
+        R_unit = 3.1e-2 * np.pow(
+            self.I_rheo_distr_ampere, -0.96
+        )  # Input resistance [Ω]
+        return R_unit * 1e-6  # Input resistance [MΩ]
+
+    @property  # ALT OPTION: From Caillet table 4
+    def I_rheo_ampere(self) -> np.float64:
+        return 7.8e2 * np.pow(self.D_soma_meter, 2.52)  # Rheobase current [A]
 
     @property
     def I_rheobase(self) -> np.float64:

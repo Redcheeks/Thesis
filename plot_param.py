@@ -24,40 +24,39 @@ def _main():
         [item.I_rheobase for item in neuron_pool_list],
         "b",
     )
-    # for i in pars_dict:
-    #     ax1.plot(pars_dict[i]["R"], pars_dict[i]["I_th"], "k.")
     ax1.set_xlabel("R [MΩ]")
     ax1.set_ylabel("I_th (Rheobase) [nA]")
-    # ax.set_ylim([-80, -40])
-    ax1.set_title("I_th - R ")
+    ax1.set_title("I_th - R from Soma_size ")
 
-    # pars_dict[i]["R"]
-    # [item["R"] for item in pars_dict]
-
-    ## PLOT tau vs R
-
+    ## PLOT I_rheobase distribution vs R
     ax2.plot(
         [item.R_Mohm for item in neuron_pool_list],
-        [item.tau_ms for item in neuron_pool_list],
-        "k",
+        [item.I_rheo_distr for item in neuron_pool_list],
+        "b",
     )
     ax2.set_xlabel("R [MΩ]")
-    ax2.set_ylabel("τ [ms]")
-    # ax.set_ylim([-80, -40])
-    ax2.set_title("τ - R ")
+    ax2.set_ylabel("I_th  [nA]")
+    ax2.set_title("Rheo from distr. - R from Soma_size ")
 
-    ## PLOT S_soma vs R
-
-    for i in neuron_pool_list:
-        ax3.plot(
-            [item.R_Mohm for item in neuron_pool_list],
-            [item.D_soma for item in neuron_pool_list],
-            "k",
-        )
+    ## PLOT I_rheobase distribution vs R from rheobase
+    ax3.plot(
+        [item.R_I_Mohm for item in neuron_pool_list],
+        [item.I_rheo_distr for item in neuron_pool_list],
+        "b",
+    )
     ax3.set_xlabel("R [MΩ]")
-    ax3.set_ylabel("D_soma [(μm)]")
-    # ax.set_ylim([-80, -40])
-    ax3.set_title("D_soma - R ")
+    ax3.set_ylabel("I_th  [nA]")
+    ax3.set_title("Rheo from distr. - R from Rheo-distr. ")
+
+    ## PLOT D_soma vs R
+    ax4.plot(
+        [item.R_Mohm for item in neuron_pool_list],
+        [item.D_soma for item in neuron_pool_list],
+        "k",
+    )
+    ax4.set_xlabel("R [MΩ]")
+    ax4.set_ylabel("D_soma [(μm)]")
+    ax4.set_title("D_soma - R from Soma_size ")
 
     plt.subplots_adjust(hspace=0.5)
     plt.show()
