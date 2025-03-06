@@ -8,8 +8,10 @@ V_RESET: np.float64 = -70  # Reset potential in mV
 V_INIT: np.float64 = -70  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
 
-SOMA_DIAM_MIN_METER: np.float64 = 50e-6
-SOMA_DIAM_MAX_METER: np.float64 = 100e-6
+SOMA_DIAM_MIN_METER: np.float64 = 30e-6
+SOMA_DIAM_MAX_METER: np.float64 = 70e-6
+
+# TODO Figure out size values, relationships maybe dont work for larger neurons??
 
 
 @dataclass(frozen=True)
@@ -102,18 +104,15 @@ class Neuron:
 
     @property
     def Rheobase_threshold(self) -> np.float64:
-        """Doublet threshold (Rheobase current) nano_Ampere"""  # TODO From Paper..
+        """Doublet threshold (Rheobase current) nano_Ampere"""  # TODO From Paper.. (add source)
         return (
             self.I_rheobase * self.doublet_rheobase_coefficient
         )  # Doublet current threshold [nA]
 
     @property
     def tref_seconds(self) -> np.float64:
-        """Refractory time in Seconds"""  # From Caillet table 4
-        # factor 0.3 -> decreased refractory time to make it work...
-        return (
-            0.3 * 0.2 * 2.7e-8 * np.pow(self.D_soma_meter, -1.51)
-        )  # Refractory time [s]
+        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable
+        return 0.2 * 2.7e-8 * np.pow(self.D_soma_meter, -1.51)  # Refractory time [s]
 
     @property
     def tref(self) -> np.float64:

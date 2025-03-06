@@ -49,7 +49,7 @@ def _main():
 
     number_of_clusters = 5  # Number of clusters
     max_I = 40  # Max input current (nA)
-    CCoV = 0  # Common noise CoV (%)
+    CCoV = 0  # Cluster-common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
     signal_type = "sinusoid.hz"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
     freq = 2  # Frequency for sinusoid
