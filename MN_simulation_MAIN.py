@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters.
 from simulation.models.LIF_model1 import LIF_Model1  # class handling LIF models.
+from simulation.models.LIF_model2 import LIF_Model2  # class handling LIF models.
 from descending_drive import cortical_input  # script for creating current input.
 
 
@@ -39,16 +40,16 @@ def _main():
     DT = 0.1  # Time step in [ms]
     neuron_pool_size = 300  # Total number of Neurons in the pool
 
-    neuron_indexes = [5, 50, 150, 200, 275]  # Neurons to be modelled & plotted.
+    neuron_indexes = [50]  # Neurons to be modelled & plotted.
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model1  # Options: LIF_Model1
+    model_choice = LIF_Model2  # Options: LIF_Model1, LIF_Model2
 
     ## -- Cortical input - simulation parameters -- ##
 
     number_of_clusters = 5  # Number of clusters
-    max_I = 40  # Max input current (nA)
+    max_I = 10  # Max input current (nA)
     CCoV = 0  # Cluster-common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
     signal_type = "sinusoid.hz"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
@@ -79,7 +80,7 @@ def _main():
     simulation_results = [
         (
             b,
-            LIF_Model1.simulate_neuron(
+            model_choice.simulate_neuron(
                 T, DT, neuron=b, Iinj=CI[: int(T / DT), b.number]
             ),
         )

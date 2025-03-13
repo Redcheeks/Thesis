@@ -6,7 +6,7 @@ from simulation.simulate import TimestepSimulation
 ##MODEL WITH VARIABLE RESET VOLTAGE##
 
 
-class LIF_Model_Template(TimestepSimulation):
+class LIF_Model2(TimestepSimulation):
 
     @staticmethod
     def simulate_neuron(
@@ -30,6 +30,7 @@ class LIF_Model_Template(TimestepSimulation):
         # Initialize voltage
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
+        V_reset = 0
 
         # Set current time course
         # Iinj = Iinj * np.ones(sim_steps)
@@ -37,25 +38,49 @@ class LIF_Model_Template(TimestepSimulation):
         # Loop over time
         rec_spikes = []  # record spike times
         tr = 0.0  # the count for refractory duration
+        last_spike_counter = (
+            100 / timestep
+        )  # time since spike, used for doublet interval (3-10ms).
 
         for it in range(simulation_steps - 1):
 
             if tr > 0:  # check if in refractory period
-                v[it] = neuron.V_reset_mV  # set voltage to reset
+
+                # ------- Calculate new reset voltage based on how close to rheobase current ------ #
+                V_reset_it = neuron.calculate_v_reset(Iinj[it])
+                v[it] = V_reset_it  # set voltage to reset
+
                 tr = tr - 1  # reduce running counter of refractory period
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
-                rec_spikes.append(it)  # record spike event
-                v[it] = neuron.V_reset_mV  # reset voltage
-                tr = neuron.tref / timestep  # set refractory time
+                if last_spike_counter < 10 / timestep:
+                    # This spike is a doublet!
+                    rec_spikes.append(it)  # record spike event
+                    ##ONLY FOR MAKING DOUBLETS MORE VISIBLE!!
+                    v[it - 1] = neuron.V_th_mV + 20
+                    last_spike_counter = 0.0
+                    # After doublet reset voltage is even lower!!#
+                    V_reset_it = neuron.V_reset_mV - 20  # 20 is an arbitrary value..
+                    v[it] = V_reset_it  # set voltage to reset
+                    tr = neuron.tref * 2 / timestep  # set longer refractory time
+
+                else:
+                    rec_spikes.append(it)  # record spike event
+                    last_spike_counter = 0.0
+                    # ------- Calculate new reset voltage based on how close to rheobase current ------ #
+                    V_reset_it = neuron.calculate_v_reset(Iinj[it])
+                    v[it] = V_reset_it  # set voltage to reset
+                    tr = neuron.tref / timestep  # set refractory time
 
             # Calculate the increment of the membrane potential
-            dv = (-(v[it] - neuron.E_L_mV) + (Iinj[it] / neuron.g_L)) * (
-                timestep / neuron.tau_ms
-            )
+            dv = (
+                -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
+                + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
+            ) * (timestep / neuron.tau_ms)
 
             # Update the membrane potential [mv]
             v[it + 1] = v[it] + dv
+            last_spike_counter += 1
 
         # Get spike times in ms
         rec_spikes = np.array(rec_spikes) * timestep
