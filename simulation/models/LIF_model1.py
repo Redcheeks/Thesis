@@ -81,7 +81,9 @@ class LIF_Model1(TimestepSimulation):
                 rec_spikes.append(it)  # record spike event
                 relax_counter = 0.0
                 renshaw_inhib = True
-                v[it - 1] = neuron.V_th_mV + 20  ##ONLY FOR MAKING SPIKES MORE VISIBLE!!
+                v[it - 1] = (
+                    neuron.V_th_mV + 20
+                )  ##ONLY FOR MAKING DOUBLETS MORE VISIBLE!!
                 v[it] = neuron.V_reset_mV  # reset voltage
                 tr = (
                     neuron.tref * 2 / timestep
