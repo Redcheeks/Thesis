@@ -52,7 +52,9 @@ def _main():
     max_I = 10  # Max input current (nA)
     CCoV = 0  # Cluster-common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
-    signal_type = "sinusoid.hz"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
+    signal_type = (
+        "step"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
+    )
     freq = 2  # Frequency for sinusoid
 
     ##-------------------------------------------------- ##
