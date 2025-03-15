@@ -72,11 +72,11 @@ class LIF_Model1(TimestepSimulation):
                 tr = neuron.tref / timestep  # set refractory time
 
             elif (
-                renshaw_inhib == False  # renshaw cell is not in inhibition state
-                and (3 / timestep)
+                (3 / timestep)
                 < last_spike_counter
                 < (10 / timestep)  # doublet interval
-                and Iinj[it] >= neuron.Rheobase_threshold  # current threshold
+                and Iinj[it] >= neuron.I_rheobase  # current threshold
+                and renshaw_inhib == False  # renshaw cell is not in inhibition state
             ):
                 rec_spikes.append(it)  # record spike event
                 relax_counter = 0.0
