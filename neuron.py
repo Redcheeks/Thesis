@@ -72,18 +72,18 @@ class Neuron:
         )  # 7.9e-5 * D_soma_unit * R_unit  # Membrane time constant [s]
         return tau_unit * 1e3  # Membrane time constant [ms]
 
-    @property  # OPTION : from Caillet code - Rheobase Distribution
-    def I_rheo_distr_ampere(self) -> np.float64:
-        """Rheobase current distribution Ampere"""
-        return 3.85e-9 * np.pow(
-            9.1, np.pow((self.number / self.num_total_neurons), 1.1831)
-        )
-        # Rheobase current [A]
+    # @property  # OPTION : from Caillet code - Rheobase Distribution
+    # def I_rheo_distr_ampere(self) -> np.float64:
+    #     """Rheobase current distribution Ampere"""
+    #     return 3.85e-9 * np.pow(
+    #         9.1, np.pow((self.number / self.num_total_neurons), 1.1831)
+    #     )
+    #     # Rheobase current [A]
 
-    @property
-    def I_rheo_distr(self) -> np.float64:
-        """Rheobase current distribution nanoAmpere"""
-        return self.I_rheo_distr_ampere * 1e9  # Rheobase current [nA]
+    # @property
+    # def I_rheo_distr(self) -> np.float64:
+    #     """Rheobase current distribution nanoAmpere"""
+    #     return self.I_rheo_distr_ampere * 1e9  # Rheobase current [nA]
 
     @property
     def R_I_Mohm(self) -> np.float64:
@@ -112,7 +112,13 @@ class Neuron:
     @property
     def tref_seconds(self) -> np.float64:
         """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable
-        return 0.2 * 2.7e-8 * np.pow(self.D_soma_meter, -1.51)  # Refractory time [s]
+        return (
+            0.5
+            * 0.2
+            * 2.7e-8
+            * np.pow(self.D_soma_meter, -1.51)
+            # Refractory time [s]
+        )
 
     @property
     def tref(self) -> np.float64:
@@ -131,8 +137,8 @@ class Neuron:
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
         #TODO : How far is the increased excitability distributed?
         """
-        delta_I = abs(self.I_rheo_distr - Iinj_it)  # Absolute current difference
-        max_diff = 5e-9  # 5 nA
+        delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
+        max_diff = 5  # 5 nA
 
         if delta_I >= max_diff:
             return (
@@ -140,9 +146,7 @@ class Neuron:
             )  # If difference exceeds 5 nA, set fixed reset voltage
 
         # Linear interpolation between V_th_mV and V_reset_mV
-        V_reset = self.V_reset_mV + (delta_I / max_diff) * (
-            self.V_th_mV - self.V_reset_mV
-        )
+        V_reset = self.V_th_mV + (delta_I / max_diff) * (self.V_th_mV - self.V_reset_mV)
 
         return V_reset
 
