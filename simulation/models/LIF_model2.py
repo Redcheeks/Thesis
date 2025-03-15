@@ -56,11 +56,11 @@ class LIF_Model2(TimestepSimulation):
                 if last_spike_counter < 10 / timestep:
                     # This spike is a doublet!
                     rec_spikes.append(it)  # record spike event
-                    ##ONLY FOR MAKING DOUBLETS MORE VISIBLE!!
+                    ##ONLY FOR MAKING DOUBLETS EVEN MORE VISIBLE!!
                     v[it - 1] = neuron.V_th_mV + 20
                     last_spike_counter = 0.0
                     # After doublet reset voltage is even lower!!#
-                    V_reset_it = neuron.V_reset_mV - 20  # 20 is an arbitrary value..
+                    V_reset_it = neuron.V_reset_mV - 10  # 20 is an arbitrary value..
                     v[it] = V_reset_it  # set voltage to reset
                     tr = neuron.tref * 2 / timestep  # set longer refractory time
 

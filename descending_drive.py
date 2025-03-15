@@ -146,7 +146,7 @@ def cortical_input(
 
 def _main():
     # Example Usage
-    T_dur = 10000  # Total time in ms
+    T_dur = 1000  # Total time in ms
     dt = 1  # Time step in ms
     n_mn = 300  # Number of motor neurons
     n_clust = 5  # Number of clusters
@@ -169,7 +169,9 @@ def _main():
     plt.title("Cortical Input for Multiple Neurons")
 
     plt.figure(2, figsize=(12, 6))
-    sns.heatmap(CI.T, cmap="coolwarm", xticklabels=1000, yticklabels=5)
+    sns.heatmap(
+        CI.T, cmap="coolwarm", xticklabels=1000, yticklabels=5
+    )  # .T to transpose
     plt.xlabel("Time (samples)")
     plt.ylabel("Neurons")
     plt.title("Cortical Input Heatmap")

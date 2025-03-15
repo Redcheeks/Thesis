@@ -129,9 +129,10 @@ class Neuron:
         """
         Calculates a linearly distributed reset voltage based on the injected current.
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
+        #TODO : How far is the increased excitability distributed?
         """
         delta_I = abs(self.I_rheo_distr - Iinj_it)  # Absolute current difference
-        max_diff = 10e-9  # 5 nA
+        max_diff = 5e-9  # 5 nA
 
         if delta_I >= max_diff:
             return (

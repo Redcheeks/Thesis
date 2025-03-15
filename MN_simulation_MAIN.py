@@ -5,16 +5,17 @@ from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters
 from simulation.models.LIF_model1 import LIF_Model1  # class handling LIF models.
 from simulation.models.LIF_model2 import LIF_Model2  # class handling LIF models.
 from descending_drive import cortical_input  # script for creating current input.
+import seaborn as sns
 
 
 T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 
 
-def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron, []]]):
+def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     """Produces a membrane potential - Time plot for the given simulation results."""
 
-    time = np.linspace(0, np.shape(CI)[0], np.shape(CI)[0])
+    time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
 
     fig, ax = plt.subplots()
     for neuron_data_pair in simulation_data:
@@ -29,18 +30,74 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron, []]]):
     ax.axhline(
         simulation_data[0][0].V_th_mV, color="k", ls="--"
     )  # gets the first neurons threshold level
+    ax.set_ylabel("Membrane Potential (mV)")
+    ax.set_xlabel("Time (ms)")
+    ax.set_title("Neuron Output")
     ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
+
+
+def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
+
+    freq = {}  # record freq over time for each neuron
+    fig, ax = plt.subplots()
+    for neuron_data_pair in simulation_data:
+        v, sp = neuron_data_pair[1]
+
+        if len(sp) < 2:
+            freq = 0  # Not enough spikes to compute frequency
+        else:
+            isi = np.diff(sp * 1e-3)  # Compute interspike intervals, time in ms
+
+            # Assign frequency values to corresponding spike times (excluding the first spike)
+            freq[neuron_data_pair[0].number] = np.concatenate(
+                ([0], 1 / isi)
+            )  # First spike has no frequency
+
+            ax.plot(sp, freq[neuron_data_pair[0].number], ".")
+
+    ax.set_ylabel("Frequency (HZ)")
+    ax.set_xlabel("Time (ms)")
+    ax.set_title("Frequency-time Plot")
+    ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
+
+
+def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
+
+    time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
+    outputs = []
+    fig, ax = plt.subplots()
+    for neuron_data_pair in simulation_data:
+        v, sp = neuron_data_pair[1]
+        if sp.size:
+            sp_num = (sp / DT).astype(int) - 1
+            v[sp_num] += 20  # draw nicer spikes
+        outputs.append(v)
+
+    plt.figure(figsize=(12, 6))
+    sns.heatmap(
+        outputs,
+        cmap="coolwarm",
+        xticklabels=False,
+        yticklabels=[
+            neuron_data_pair[0].number for neuron_data_pair in simulation_data
+        ],
+        vmax=30,
+    )
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Neurons")
+    plt.title("Neuron Output Heatmap")
+    plt.show()
 
 
 def _main():
 
     ## ------------- Simulation Parameters ------------- ##
 
-    T = 1000  # Simulation Time [ms]
-    DT = 0.1  # Time step in [ms]
+    # T = 1000  # Simulation Time [ms]
+    # DT = 0.1  # Time step in [ms]
     neuron_pool_size = 300  # Total number of Neurons in the pool
 
-    neuron_indexes = [50]  # Neurons to be modelled & plotted.
+    neuron_indexes = [50, 100]  # Neurons to be modelled & plotted.
 
     ## SELECT THE MODEL TO RUN
 
@@ -50,10 +107,10 @@ def _main():
 
     number_of_clusters = 5  # Number of clusters
     max_I = 10  # Max input current (nA)
-    CCoV = 0  # Cluster-common noise CoV (%)
-    ICoV = 0  # Independent noise CoV (%)
+    CCoV = 10  # Cluster-common noise CoV (%)
+    ICoV = 5  # Independent noise CoV (%)
     signal_type = (
-        "step"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
+        "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
     )
     freq = 2  # Frequency for sinusoid
 
@@ -74,7 +131,8 @@ def _main():
     # Create neurons with NEURONFACTORY class (# Generate list of new neurons)
 
     all_neurons = NeuronFactory.create_neuron_pool(number_of_neurons=neuron_pool_size)
-    neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
+    # neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
+    neurons_to_simulate = all_neurons
 
     # TODO Run simulation for selected neurons with iunput CI (possible make a new method in SIMULATION class to run many simulations?)
 
@@ -92,6 +150,9 @@ def _main():
     # TODO Some Plotting choices
 
     Output_plots(CI, simulation_results)
+    Freq_inst_plot(CI, simulation_results)
+    output_heatmat(CI, simulation_results)
+
     plt.show()
 
 
