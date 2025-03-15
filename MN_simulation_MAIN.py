@@ -77,13 +77,13 @@ def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     sns.heatmap(
         outputs,
         cmap="coolwarm",
-        xticklabels=False,
+        xticklabels=1000,
         yticklabels=[
             neuron_data_pair[0].number for neuron_data_pair in simulation_data
         ],
-        vmax=30,
     )
-    plt.xlabel("Time (ms)")
+
+    plt.xlabel("Time (steps)")
     plt.ylabel("Neurons")
     plt.title("Neuron Output Heatmap")
     plt.show()
@@ -97,8 +97,6 @@ def _main():
     # DT = 0.1  # Time step in [ms]
     neuron_pool_size = 300  # Total number of Neurons in the pool
 
-    neuron_indexes = [50, 100]  # Neurons to be modelled & plotted.
-
     ## SELECT THE MODEL TO RUN
 
     model_choice = LIF_Model2  # Options: LIF_Model1, LIF_Model2
@@ -106,15 +104,13 @@ def _main():
     ## -- Cortical input - simulation parameters -- ##
 
     number_of_clusters = 5  # Number of clusters
-    max_I = 10  # Max input current (nA)
+    max_I = 40  # Max input current (nA)
     CCoV = 10  # Cluster-common noise CoV (%)
     ICoV = 5  # Independent noise CoV (%)
     signal_type = (
         "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
     )
     freq = 2  # Frequency for sinusoid
-
-    ##-------------------------------------------------- ##
 
     CI = cortical_input(
         neuron_pool_size,
@@ -131,8 +127,25 @@ def _main():
     # Create neurons with NEURONFACTORY class (# Generate list of new neurons)
 
     all_neurons = NeuronFactory.create_neuron_pool(number_of_neurons=neuron_pool_size)
-    # neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
-    neurons_to_simulate = all_neurons
+    neuron_indexes = [50, 100, 250]  # Neurons to be modelled & plotted.
+    neuron_indexes = [
+        5,
+        10,
+        50,
+        100,
+        120,
+        200,
+        230,
+        250,
+        270,
+        280,
+        290,
+    ]  # Neurons to be modelled & plotted.
+
+    neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
+    # neurons_to_simulate = all_neurons # OPTION: Use this to model all 300 neurons!
+
+    ##-------------------------------------------------- ##
 
     # TODO Run simulation for selected neurons with iunput CI (possible make a new method in SIMULATION class to run many simulations?)
 
