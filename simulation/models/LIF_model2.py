@@ -30,7 +30,7 @@ class LIF_Model2(TimestepSimulation):
         # Initialize voltage
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
-        V_reset = 0
+        V_reset_it = neuron.V_reset_mV
 
         # Set current time course
         # Iinj = Iinj * np.ones(sim_steps)
@@ -46,8 +46,6 @@ class LIF_Model2(TimestepSimulation):
 
             if tr > 0:  # check if in refractory period
 
-                # ------- Calculate new reset voltage based on how close to rheobase current ------ #
-                V_reset_it = neuron.calculate_v_reset(Iinj[it])
                 v[it] = V_reset_it  # set voltage to reset
 
                 tr = tr - 1  # reduce running counter of refractory period
@@ -57,7 +55,7 @@ class LIF_Model2(TimestepSimulation):
                     # This spike is a doublet!
                     rec_spikes.append(it)  # record spike event
                     ##ONLY FOR MAKING DOUBLETS EVEN MORE VISIBLE!!
-                    v[it - 1] = neuron.V_th_mV + 20
+                    v[it - 1] = 0
                     last_spike_counter = 0.0
                     # After doublet reset voltage is even lower!!#
                     V_reset_it = neuron.V_reset_mV - 10  # 20 is an arbitrary value..
@@ -66,11 +64,12 @@ class LIF_Model2(TimestepSimulation):
 
                 else:
                     rec_spikes.append(it)  # record spike event
-                    last_spike_counter = 0.0
+
                     # ------- Calculate new reset voltage based on how close to rheobase current ------ #
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
                     v[it] = V_reset_it  # set voltage to reset
                     tr = neuron.tref / timestep  # set refractory time
+                    last_spike_counter = 0.0
 
             # Calculate the increment of the membrane potential
             dv = (
