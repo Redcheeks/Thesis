@@ -18,35 +18,35 @@ def _main():
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
-    ## PLOT I_rheobase vs R
+    ## PLOT I_rheobase vs D_soma
     ax1.plot(
-        [item.R_Mohm for item in neuron_pool_list],
+        [item.D_soma for item in neuron_pool_list],
         [item.I_rheobase for item in neuron_pool_list],
         "b",
     )
-    ax1.set_xlabel("R [MΩ]")
+    ax1.set_xlabel("D_soma [MΩ]")
     ax1.set_ylabel("I_th (Rheobase) [nA]")
-    ax1.set_title("I_th - R from Soma_size ")
+    ax1.set_title("I_th - Soma_size ")
 
-    ## PLOT I_rheobase distribution vs R
+    ## PLOT D_soma and tref
     ax2.plot(
-        [item.R_Mohm for item in neuron_pool_list],
-        [item.I_rheo_distr for item in neuron_pool_list],
+        [item.D_soma for item in neuron_pool_list],
+        [item.tref for item in neuron_pool_list],
         "b",
     )
-    ax2.set_xlabel("R [MΩ]")
-    ax2.set_ylabel("I_th  [nA]")
-    ax2.set_title("Rheo from distr. - R from Soma_size ")
+    ax2.set_xlabel("D_soma []")
+    ax2.set_ylabel("tref  [ms]")
+    ax2.set_title("soma size and absolute refractory period")
 
-    ## PLOT I_rheobase distribution vs R from rheobase
-    ax3.plot(
-        [item.R_I_Mohm for item in neuron_pool_list],
-        [item.I_rheo_distr for item in neuron_pool_list],
-        "b",
-    )
-    ax3.set_xlabel("R [MΩ]")
-    ax3.set_ylabel("I_th  [nA]")
-    ax3.set_title("Rheo from distr. - R from Rheo-distr. ")
+    # ## PLOT D_soma and
+    # ax3.plot(
+    #     [item.D_soma for item in neuron_pool_list],
+    #     [item.tref for item in neuron_pool_list],
+    #     "b",
+    # )
+    # ax3.set_xlabel("D_soma []")
+    # ax3.set_ylabel("tref  [ms]")
+    # ax3.set_title("soma size and absolute refractory period")
 
     ## PLOT D_soma vs R
     ax4.plot(
@@ -59,6 +59,19 @@ def _main():
     ax4.set_title("D_soma - R from Soma_size ")
 
     plt.subplots_adjust(hspace=0.5)
+    # plt.show()
+
+    # Soma size of mice? Caillet Elife figure 7 shows that R is between 1-8 MOhm
+
+    fig, ax = plt.subplots()
+    R_mouse = np.linspace(1 * 1e-9, 8 * 1e-9, 200)  # R in ohm
+    D_mouse = 1.7e-2 * np.pow(R_mouse, -0.41)  # D in meters
+    S_mouse = D_mouse * 5.5e-3  # 9.5e-5 * np.pow(R_mouse, -0.41)  # S in meters^2
+
+    ax.plot(R_mouse * 1e9, D_mouse)
+    ax.set_xlabel("R mouse [MΩ]")
+    ax.set_ylabel("D_soma mouse [(μm)]")
+    ax.set_title("D_soma - R for MOUSE ")
     plt.show()
 
 

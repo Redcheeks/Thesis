@@ -8,8 +8,12 @@ V_RESET: np.float64 = -70  # Reset potential in mV
 V_INIT: np.float64 = -70  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
 
-SOMA_DIAM_MIN_METER: np.float64 = 30e-6
-SOMA_DIAM_MAX_METER: np.float64 = 70e-6
+SOMA_DIAM_MIN_METER: np.float64 = 50e-6
+SOMA_DIAM_MAX_METER: np.float64 = 100e-6
+
+# From francois github :
+#   # Assuming that soma diameter from human motoneurons vary between 50 and 100 micrometers, loosely based on https://journals.physiology.org/doi/full/10.1152/physiol.00021.2018 (mean diameter of humans MN estimated to be ~60 micrometers)
+#   # ^ "Scaling of motoneurons, From Mouse to Human" Manuel et al. Physiology (2018)
 
 # TODO Figure out size values, relationships maybe dont work for larger neurons??
 
@@ -85,13 +89,13 @@ class Neuron:
     #     """Rheobase current distribution nanoAmpere"""
     #     return self.I_rheo_distr_ampere * 1e9  # Rheobase current [nA]
 
-    @property
-    def R_I_Mohm(self) -> np.float64:
-        """Membrane Resistance from Rheobase Currentin Mega_Ohm"""  # From Caillet table 4
-        R_unit = 3.1e-2 * np.pow(
-            self.I_rheo_distr_ampere, -0.96
-        )  # Input resistance [Ω]
-        return R_unit * 1e-6  # Input resistance [MΩ]
+    # @property
+    # def R_I_Mohm(self) -> np.float64:
+    #     """Membrane Resistance from Rheobase Current in Mega_Ohm"""  # From Caillet table 4
+    #     R_unit = 3.1e-2 * np.pow(
+    #         self.I_rheo_distr_ampere, -0.96
+    #     )  # Input resistance [Ω]
+    #     return R_unit * 1e-6  # Input resistance [MΩ]
 
     @property  # ALT OPTION: From Caillet table 4
     def I_rheo_ampere(self) -> np.float64:
@@ -111,14 +115,9 @@ class Neuron:
 
     @property
     def tref_seconds(self) -> np.float64:
-        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable
-        return (
-            0.5
-            * 0.2
-            * 2.7e-8
-            * np.pow(self.D_soma_meter, -1.51)
-            # Refractory time [s]
-        )
+        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable??
+        AHP = 2.7e-8 * np.pow(self.D_soma_meter, -1.51)
+        return 0.1 * AHP  # Refractory time [s]
 
     @property
     def tref(self) -> np.float64:
