@@ -65,7 +65,6 @@ def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
 
     time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
     outputs = []
-    fig, ax = plt.subplots()
     for neuron_data_pair in simulation_data:
         v, sp = neuron_data_pair[1]
         if sp.size:
@@ -86,7 +85,6 @@ def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     plt.xlabel("Time (steps)")
     plt.ylabel("Neurons")
     plt.title("Neuron Output Heatmap")
-    plt.show()
 
 
 def _main():
