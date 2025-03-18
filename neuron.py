@@ -8,7 +8,7 @@ V_RESET: np.float64 = -70  # Reset potential in mV
 V_INIT: np.float64 = -70  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
 
-SOMA_DIAM_MIN_METER: np.float64 = 50e-6
+SOMA_DIAM_MIN_METER: np.float64 = 40e-6
 SOMA_DIAM_MAX_METER: np.float64 = 100e-6
 
 # From francois github :
@@ -114,10 +114,15 @@ class Neuron:
         )  # Doublet current threshold [nA]
 
     @property
+    def AHP_seconds(self) -> np.float64:  # From Caillet table 4
+        AHP = 2.7e-8 * np.pow(self.D_soma_meter, -1.51)
+
+        return AHP * 1.5  # Manuel - 1.5 fold compared to cats!
+
+    @property
     def tref_seconds(self) -> np.float64:
         """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable??
-        AHP = 2.7e-8 * np.pow(self.D_soma_meter, -1.51)
-        return 0.1 * AHP  # Refractory time [s]
+        return 0.1 * self.AHP_seconds  # Refractory time [s]
 
     @property
     def tref(self) -> np.float64:
