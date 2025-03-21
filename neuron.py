@@ -7,7 +7,7 @@ V_THRESHOLD: np.float64 = -50  # Threshold potential in mV
 V_RESET: np.float64 = -70  # Reset potential in mV
 V_INIT: np.float64 = -70  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
-
+TREF_FRAC_AHP: np.float64 = 0.025  # t_ref as a fraction of AHP.
 SOMA_DIAM_MIN_METER: np.float64 = 40e-6
 SOMA_DIAM_MAX_METER: np.float64 = 100e-6
 
@@ -108,7 +108,7 @@ class Neuron:
 
     @property
     def Rheobase_threshold(self) -> np.float64:
-        """Doublet threshold (Rheobase current) nano_Ampere"""  # TODO From Paper.. (add source)
+        """Doublet threshold (Rheobase current) nano_Ampere"""  # From Paper https://doi.org/10.1007/s00221-010-2339-7 "Doublet of action potentials evoked by intracellular injection of rectangular depolarization current into rat motoneurones"
         return (
             self.I_rheobase * self.doublet_rheobase_coefficient
         )  # Doublet current threshold [nA]
@@ -117,12 +117,12 @@ class Neuron:
     def AHP_seconds(self) -> np.float64:  # From Caillet table 4
         AHP = 2.7e-8 * np.pow(self.D_soma_meter, -1.51)
 
-        return AHP * 1.5  # Manuel - 1.5 fold compared to cats!
+        return AHP  # Manuel et al. - humans AHP should be 1.5 fold compared to cats?
 
     @property
     def tref_seconds(self) -> np.float64:
-        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is 0.2 reasonable??
-        return 0.1 * self.AHP_seconds  # Refractory time [s]
+        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is AHP * 0.2 from Hug et al. reasonable??
+        return TREF_FRAC_AHP * self.AHP_seconds  # Refractory time [s]
 
     @property
     def tref(self) -> np.float64:

@@ -26,9 +26,7 @@ def cortical_input(
     Returns:
         np.array: Current vector.
     """
-    # Copied from Robins matlab code
-    # Copied and modified the version from Thomas (originally from Negro & Farina (2011)?)
-    # To do: make the mean drive functions more general and less hardcoded etc
+
     # CCoV = 20; % percent of mean
     # ICoV = 0.25*CCoV; % percent of mean
 
@@ -77,6 +75,28 @@ def cortical_input(
 
         # Normalize to range [0, max_I]
         mean_drive = max_I * (sine_wave + 1) / 2
+
+    elif mean_shape == "step-sinusoid":
+
+        # Compute the number of samples for each phase
+        ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
+        hold_len = int(round((4 / 12) * T_dur) / dt)  # 2 Hold phases
+
+        # Generate the sinusoidal wave
+        sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * hold_len)
+
+        # Normalize to range [0, max_I/2]
+        sine_drive = max_I / 2 * (sine_wave + 1) / 2
+
+        # Create each section
+        ramp_up = np.linspace(0, 0.5 * max_I, ramp_len)
+        hold_segment = np.full(hold_len, 0.5 * max_I)
+        sine_segment = (
+            hold_segment + sine_drive
+        )  # here we will have sinusoid added to hold
+        ramp_down = np.linspace(0, 0.5 * max_I, ramp_len)
+
+        mean_drive = np.concatenate([ramp_up, hold_segment, sine_segment, ramp_down])
 
     else:  # elif mean_shape == "step":
 
