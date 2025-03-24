@@ -102,12 +102,10 @@ def _main():
     ## -- Cortical input - simulation parameters -- ##
 
     number_of_clusters = 5  # Number of clusters
-    max_I = 10  # Max input current (nA)
+    max_I = 20  # Max input current (nA)
     CCoV = 20  # Cluster-common noise CoV (%)
     ICoV = 5  # Independent noise CoV (%)
-    signal_type = (
-        "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step"
-    )
+    signal_type = "step-sinusoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
     freq = 2  # Frequency for sinusoid
 
     CI = cortical_input(
