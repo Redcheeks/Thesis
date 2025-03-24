@@ -80,23 +80,21 @@ def cortical_input(
 
         # Compute the number of samples for each phase
         ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
-        hold_len = int(round((4 / 12) * T_dur) / dt)  # 2 Hold phases
-
-        # Generate the sinusoidal wave
-        sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * hold_len)
-
-        # Normalize to range [0, max_I/2]
-        sine_drive = max_I / 2 * (sine_wave + 1) / 2
+        hold_len = int(round((4 / 12) * T_dur) / dt)  # Hold phase
+        sine_len = int(round((6 / 12) * T_dur) / dt)  # Sine Phase
 
         # Create each section
-        ramp_up = np.linspace(0, 0.5 * max_I, ramp_len)
-        hold_segment = np.full(hold_len, 0.5 * max_I)
-        sine_segment = (
-            hold_segment + sine_drive
-        )  # here we will have sinusoid added to hold
-        ramp_down = np.linspace(0, 0.5 * max_I, ramp_len)
 
-        mean_drive = np.concatenate([ramp_up, hold_segment, sine_segment, ramp_down])
+        ramp_up = np.linspace(0, 2 / 3 * max_I, ramp_len)
+        hold_segment = np.full(hold_len, 2 / 3 * max_I)
+
+        # Generate the sinusoidal wave
+        time_sin = np.arange(0, sine_len)  # Time vector
+        sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * time_sin)
+
+        # Normalize to range []
+        sine_segment = 2 / 3 * max_I + (max_I / 3 * (sine_wave))
+        mean_drive = np.concatenate([ramp_up, hold_segment, sine_segment])
 
     else:  # elif mean_shape == "step":
 
@@ -167,14 +165,14 @@ def cortical_input(
 def _main():
     # Example Usage
     T_dur = 1000  # Total time in ms
-    dt = 1  # Time step in ms
+    dt = 0.1  # Time step in ms
     n_mn = 300  # Number of motor neurons
     n_clust = 5  # Number of clusters
     max_I = 10  # Max input current (nA)
-    CCoV = 20  # Common noise CoV (%)
-    ICoV = 1  # Independent noise CoV (%)
+    CCoV = 0  # Common noise CoV (%)
+    ICoV = 0  # Independent noise CoV (%)
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid")
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "step-sinusoid")
 
     # Plot the first motor neuron's cortical input
     plt.figure(1, figsize=(8, 6))
@@ -188,19 +186,19 @@ def _main():
     plt.ylabel("Current (nA)")
     plt.title("Cortical Input for Multiple Neurons")
 
-    plt.figure(2, figsize=(12, 6))
-    sns.heatmap(
-        CI.T, cmap="coolwarm", xticklabels=1000, yticklabels=5
-    )  # .T to transpose
-    plt.xlabel("Time (samples)")
-    plt.ylabel("Neurons")
-    plt.title("Cortical Input Heatmap")
+    # plt.figure(2, figsize=(12, 6))
+    # sns.heatmap(
+    #     CI.T, cmap="coolwarm", xticklabels=1000, yticklabels=5
+    # )  # .T to transpose
+    # plt.xlabel("Time (samples)")
+    # plt.ylabel("Neurons")
+    # plt.title("Cortical Input Heatmap")
     plt.show()
 
     mean_activity = CI.mean(axis=0)  # Mean cortical input per neuron
     std_activity = CI.std(axis=0)  # Standard deviation per neuron
 
-    print(std_activity / mean_activity)
+    # print(std_activity / mean_activity)
 
     # print("Mean cortical input per neuron:")S
     # print(mean_activity)
