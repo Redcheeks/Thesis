@@ -4,9 +4,10 @@ from typing import List
 
 V_REST: np.float64 = -70.0  # Resting potential in mV
 V_THRESHOLD: np.float64 = -50  # Threshold potential in mV
-V_RESET: np.float64 = -70  # Reset potential in mV
-V_INIT: np.float64 = -70  # Initial potential in mV
+V_RESET: np.float64 = -75.0  # Hyperpolarization, membrane potential in mV
+V_INIT: np.float64 = -70.0  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
+
 TREF_FRAC_AHP: np.float64 = 0.025  # t_ref as a fraction of AHP.
 SOMA_DIAM_MIN_METER: np.float64 = 40e-6
 SOMA_DIAM_MAX_METER: np.float64 = 100e-6

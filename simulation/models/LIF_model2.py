@@ -46,7 +46,9 @@ class LIF_Model2(TimestepSimulation):
 
             if tr > 0:  # check if in refractory period
 
-                v[it] = V_reset_it  # set voltage to reset
+                v[it] = (
+                    V_reset_it  # set voltage to reset #TODO: When are we doing the calculation, final refractory step?!!
+                )
 
                 tr = tr - 1  # reduce running counter of refractory period
 
@@ -60,7 +62,9 @@ class LIF_Model2(TimestepSimulation):
                     # After doublet reset voltage is even lower!!#
                     V_reset_it = neuron.V_reset_mV - 10  # 20 is an arbitrary value..
                     v[it] = V_reset_it  # set voltage to reset
-                    tr = neuron.tref * 2 / timestep  # set longer refractory time
+                    tr = (
+                        neuron.tref * 2 / timestep
+                    )  # set longer refractory time. Might not need this.
 
                 else:
                     rec_spikes.append(it)  # record spike event
