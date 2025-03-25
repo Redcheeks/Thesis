@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Abeln"
+  given-names: "Lilly"
+  orcid: ""
+- family-names: "Joe"
+  given-names: "Bowers"
+  orcid: ""
+title: "Implementation and fitting of a Leaky Integrate and Fire (LIF) motor neuron membrane model to human spiketrains extracted from surface electromyography."
+version: 1.0.0
+doi: 
+date-released: 2025
+url: "https://github.com/Redcheeks/Thesis"
