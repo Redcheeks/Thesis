@@ -97,7 +97,7 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model1  # Options: LIF_Model1, LIF_Model2
+    model_choice = LIF_Model2  # Options: LIF_Model1, LIF_Model2
 
     ## -- Cortical input - simulation parameters -- ##
 
@@ -125,17 +125,11 @@ def _main():
     all_neurons = NeuronFactory.create_neuron_pool(number_of_neurons=neuron_pool_size)
     neuron_indexes = [50, 100, 250]  # Neurons to be modelled & plotted.
     neuron_indexes = [
-        5,
-        10,
         50,
         100,
         120,
+        150,
         200,
-        230,
-        250,
-        270,
-        280,
-        290,
     ]  # Neurons to be modelled & plotted.
 
     neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]

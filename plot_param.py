@@ -71,17 +71,17 @@ def _main():
     plt.subplots_adjust(hspace=0.5)
     # plt.show()
 
-    # Soma size of mice? Caillet Elife figure 7 shows that R is between 1-8 MOhm
+    # # Soma size of mice? Caillet Elife figure 7 shows that R is between 1-8 MOhm
 
-    fig, ax = plt.subplots()
-    R_mouse = np.linspace(1 * 1e-9, 8 * 1e-9, 200)  # R in ohm
-    D_mouse = 1.7e-2 * np.pow(R_mouse, -0.41)  # D in meters
-    S_mouse = D_mouse * 5.5e-3  # 9.5e-5 * np.pow(R_mouse, -0.41)  # S in meters^2
+    # fig, ax = plt.subplots()
+    # R_mouse = np.linspace(1 * 1e-9, 8 * 1e-9, 200)  # R in ohm
+    # D_mouse = 1.7e-2 * np.pow(R_mouse, -0.41)  # D in meters
+    # S_mouse = D_mouse * 5.5e-3  # 9.5e-5 * np.pow(R_mouse, -0.41)  # S in meters^2
 
-    ax.plot(R_mouse * 1e9, D_mouse)
-    ax.set_xlabel("R mouse [MΩ]")
-    ax.set_ylabel("D_soma mouse [(μm)]")
-    ax.set_title("D_soma - R for MOUSE ")
+    # ax.plot(R_mouse * 1e9, D_mouse)
+    # ax.set_xlabel("R mouse [MΩ]")
+    # ax.set_ylabel("D_soma mouse [(μm)]")
+    # ax.set_title("D_soma - R for MOUSE ")
     plt.show()
 
 

@@ -42,7 +42,7 @@ class LIF_Model_basic_theory(TimestepSimulation):
 
             if tr > 0:  # check if in refractory period
                 # Gradually decay voltage toward reset using exponential decay
-                tau_refractory = 5  # you can tune this time constant (in time steps)
+                tau_refractory = 8  # you can tune this time constant (in time steps)
                 v[it] = v[it - 1] + (neuron.V_reset_mV - v[it - 1]) / tau_refractory
                 tr -= 1  # decrement refractory counter
                 if len(rec_spikes) < 2:
@@ -54,7 +54,7 @@ class LIF_Model_basic_theory(TimestepSimulation):
                 if len(rec_spikes) == 2:
 
                     v[it] = -10  # spike voltage for doublet
-                    tr = neuron.tref / timestep * 2
+                    tr = neuron.tref / timestep * 5
                 else:
                     v[it] = 0  # spike voltage
                     # v[it] = neuron.V_reset_mV  # reset voltage
