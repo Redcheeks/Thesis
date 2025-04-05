@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters.
 from simulation.models.LIF_model1 import LIF_Model1  # class handling LIF models.
 from simulation.models.LIF_model2 import LIF_Model2  # class handling LIF models.
+from simulation.models.LIF_model_SIMPLE import LIF_SIMPLE  # class handling LIF models.
 from descending_drive import cortical_input  # script for creating current input.
 import seaborn as sns
 
@@ -46,8 +47,10 @@ def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
         if len(sp) < 2:
             freq = 0  # Not enough spikes to compute frequency
         else:
-            isi = np.diff(sp * 1e-3)  # Compute interspike intervals, time in ms
+            # Compute interspike intervals, time from ms to seconds
+            isi = np.diff(sp * 1e-3)
 
+            # First spike has no frequency - set to 0, this also makes array same length as sp.
             # Assign frequency values to corresponding spike times (excluding the first spike)
             freq[neuron_data_pair[0].number] = np.concatenate(
                 ([0], 1 / isi)
@@ -97,15 +100,15 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model2  # Options: LIF_Model1, LIF_Model2
+    model_choice = LIF_Model1  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2
 
     ## -- Cortical input - simulation parameters -- ##
 
-    number_of_clusters = 5  # Number of clusters
-    max_I = 20  # Max input current (nA)
-    CCoV = 20  # Cluster-common noise CoV (%)
-    ICoV = 5  # Independent noise CoV (%)
-    signal_type = "step-sinusoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+    number_of_clusters = 1  # Number of clusters
+    max_I = 7  # Max input current (nA)
+    CCoV = 0  # Cluster-common noise CoV (%)
+    ICoV = 0  # Independent noise CoV (%)
+    signal_type = "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
     freq = 2  # Frequency for sinusoid
 
     CI = cortical_input(
@@ -122,14 +125,18 @@ def _main():
 
     # Create neurons with NEURONFACTORY class (# Generate list of new neurons)
 
-    all_neurons = NeuronFactory.create_neuron_pool(number_of_neurons=neuron_pool_size)
+    all_neurons = NeuronFactory.create_neuron_pool(
+        distribution=True, number_of_neurons=neuron_pool_size
+    )
     neuron_indexes = [50, 100, 250]  # Neurons to be modelled & plotted.
     neuron_indexes = [
+        5,
         50,
         100,
         120,
         150,
         200,
+        299,
     ]  # Neurons to be modelled & plotted.
 
     neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
@@ -154,7 +161,7 @@ def _main():
 
     Output_plots(CI, simulation_results)
     Freq_inst_plot(CI, simulation_results)
-    output_heatmat(CI, simulation_results)
+    # output_heatmat(CI, simulation_results)
 
     plt.show()
 
