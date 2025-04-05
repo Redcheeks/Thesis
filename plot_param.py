@@ -36,7 +36,7 @@ def _main():
     )
     ax2.set_xlabel("D_soma []")
     ax2.set_ylabel("tref  [ms]")
-    ax2.set_title("soma size and absolute refractory period")
+    ax2.set_title("soma size and tref (absolute refractory period)")
 
     ## PLOT D_soma and tref
     ax3.plot(
@@ -48,15 +48,15 @@ def _main():
     ax3.set_ylabel("AHP  [ms]")
     ax3.set_title("soma size and AHP duration")
 
-    # ## PLOT D_soma and
-    # ax3.plot(
-    #     [item.D_soma for item in neuron_pool_list],
+    ## PLOT S_soma and tref
+    # ax4.plot(
+    #     [item.S_soma for item in neuron_pool_list],
     #     [item.tref for item in neuron_pool_list],
     #     "b",
     # )
-    # ax3.set_xlabel("D_soma []")
-    # ax3.set_ylabel("tref  [ms]")
-    # ax3.set_title("soma size and absolute refractory period")
+    # ax4.set_xlabel("S_soma []")
+    # ax4.set_ylabel("tref  [ms]")
+    # ax4.set_title("soma size and tref")
 
     ## PLOT D_soma vs R
     ax4.plot(
