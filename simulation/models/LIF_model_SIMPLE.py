@@ -41,12 +41,12 @@ class LIF_SIMPLE(TimestepSimulation):
         for it in range(simulation_steps - 1):
 
             if tr > 0:  # check if in refractory period
-                v[it + 1] = neuron.V_reset_mV
+                v[it] = neuron.V_reset_mV  # set voltage to reset
                 tr = tr - 1  # reduce running counter of refractory period
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 rec_spikes.append(it)  # record spike event
-                v[it + 1] = neuron.V_reset_mV  # reset voltage
+                v[it] = neuron.V_reset_mV  # reset voltage
                 tr = neuron.tref / dt  # set refractory time
 
             # Calculate the increment of the membrane potential

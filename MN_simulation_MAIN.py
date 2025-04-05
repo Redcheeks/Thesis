@@ -100,7 +100,7 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model1  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2
+    model_choice = LIF_Model2  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2
 
     ## -- Cortical input - simulation parameters -- ##
 
