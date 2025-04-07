@@ -8,7 +8,7 @@ V_RESET: np.float64 = -75.0  # Hyperpolarization, membrane potential in mV
 V_INIT: np.float64 = -70.0  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
 
-TREF_FRAC_AHP: np.float64 = 0.02  # t_ref as a fraction of AHP.
+TREF_FRAC_AHP: np.float64 = 0.05  # t_ref as a fraction of AHP.
 SOMA_DIAM_MIN_METER: np.float64 = 50e-6
 SOMA_DIAM_MAX_METER: np.float64 = 100e-6
 
