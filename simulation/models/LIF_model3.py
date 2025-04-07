@@ -70,7 +70,7 @@ class LIF_Model3(TimestepSimulation):
                     rec_spikes.append(it)  # record spike event
 
                     # ------- Calculate new reset voltage based on how close to rheobase current ------ #
-                    V_reset_it = neuron.calculate_v_reset(Iinj[it])
+                    V_reset_it = neuron.calculate_v_reset_MODEL3(Iinj[it])
                     ## FOR MODEL3 ADD SOME RENSHAW EFFECT HERE!!!
                     v[it] = V_reset_it  # set voltage to reset
                     tr = neuron.tref / timestep  # set refractory time

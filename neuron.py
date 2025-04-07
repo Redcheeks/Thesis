@@ -149,7 +149,27 @@ class Neuron:
     #     return 1 / self.R_Mohm * 10  # Leak Conductance [μS]
 
     # _______ Helper Functions ________#
-    def calculate_v_reset(self, Iinj_it):
+    def calculate_v_reset(self, Iinj_it):  ##DONT TOUCH THIS FUNCTION!
+        """
+        Calculates a linearly distributed reset voltage based on the injected current.
+        If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
+        #TODO : How far is the increased excitability distributed?
+        """
+        delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
+        max_diff = 5  # 5 nA
+
+        if delta_I >= max_diff:
+            return (
+                self.V_reset_mV
+            )  # If difference exceeds 5 nA, set fixed reset voltage
+
+        # Linear interpolation between V_th_mV and V_reset_mV
+        V_reset = self.V_th_mV + (delta_I / max_diff) * (self.V_th_mV - self.V_reset_mV)
+
+        return V_reset
+
+    #### -------- MODEL 3 testing below!! -------
+    def calculate_v_reset_MODEL3(self, Iinj_it):
         """
         Calculates a linearly distributed reset voltage based on the injected current.
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
