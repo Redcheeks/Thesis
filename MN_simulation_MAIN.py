@@ -100,16 +100,16 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model2  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2
+    model_choice = LIF_Model1  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2
 
     ## -- Cortical input - simulation parameters -- ##
 
     number_of_clusters = 1  # Number of clusters
-    max_I = 7  # Max input current (nA)
+    max_I = 9  # Max input current (nA)
     CCoV = 0  # Cluster-common noise CoV (%)
     ICoV = 0  # Independent noise CoV (%)
-    signal_type = "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
-    freq = 2  # Frequency for sinusoid
+    signal_type = "sinusoid.hz"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+    freq = 3  # Frequency for sinusoid
 
     CI = cortical_input(
         neuron_pool_size,
