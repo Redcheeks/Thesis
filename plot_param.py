@@ -14,7 +14,9 @@ NUM_NEURONS = 300  # Number of Neurons simulated
 def _main():
 
     # neuron_pool_list = caillet_quadratic(T, DT, NUM_NEURONS)  # Get parameters
-    neuron_pool_list = NeuronFactory.create_neuron_pool(NUM_NEURONS)
+    neuron_pool_list = NeuronFactory.create_neuron_pool(
+        distribution=True, number_of_neurons=NUM_NEURONS
+    )
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
 
