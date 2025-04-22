@@ -18,26 +18,45 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
     """Produces a membrane potential - Time plot for the given simulation results."""
 
     time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
+    import math
 
-    fig, ax = plt.subplots()
-    for neuron_data_pair in simulation_data:
-        v, sp = neuron_data_pair[1]
-        ax.plot(time, v, "-")
+    rows = int(np.ceil(np.sqrt(len(simulation_data))))
+    cols = int(np.ceil(len(simulation_data) / rows))
+    fig, axs = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows), squeeze=False)
+    fig.suptitle("Voltage Traces - {}".format(LIF_Model1.__name__), fontsize=16)
+    axs = axs.flatten()
+    for i, neuron_data_pair in enumerate(simulation_data):
+        neuron, (v, sp) = neuron_data_pair
+        ax = axs[i]
+        ax.plot(time, v, label=f"Neuron {neuron.number}")
         for spike_time in sp:
-            ax.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+            spike_index = int(spike_time / DT)
+            if 0 <= spike_index < len(v):
+                v[spike_index] += 20  # show a voltage spike
+            ax.axvline(spike_time, color="gray", ls="--", alpha=0.4, label="_nolegend_")
         for j in range(1, len(sp)):
             isi = sp[j] - sp[j - 1]
             if 3 <= isi <= 10:
-                ax.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
+                ax.axvline(
+                    sp[j], color="blue", ls="--", lw=1, alpha=0.7, label="_nolegend_"
+                )
+        ax.set_ylim([-80, -20])
+        ax.axhline(neuron.V_th_mV, color="k", ls="--", label="Threshold")
+        ax.set_ylabel("Membrane Potential (mV)")
+        ax.set_xlabel("Time (ms)")
+        ax.set_title(f"Neuron {neuron.number}")
+        ax.legend()
+    # Hide unused axes
+    for j in range(len(simulation_data), len(axs)):
+        fig.delaxes(axs[j])
+    # Custom legend for spike types
+    from matplotlib.lines import Line2D
 
-    ax.set_ylim([-80, -20])
-    ax.axhline(
-        simulation_data[0][0].V_th_mV, color="k", ls="--"
-    )  # gets the first neurons threshold level
-    ax.set_ylabel("Membrane Potential (mV)")
-    ax.set_xlabel("Time (ms)")
-    ax.set_title("Neuron Output")
-    ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
+    custom_lines = [
+        Line2D([0], [0], color="gray", ls="--", alpha=0.4, label="Spike"),
+        Line2D([0], [0], color="blue", ls="--", lw=1, alpha=0.7, label="Doublet"),
+    ]
+    fig.legend(handles=custom_lines, loc="upper center", ncol=2)
 
 
 def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
