@@ -11,7 +11,7 @@ class LIF_Model2(TimestepSimulation):
     @staticmethod
     def simulate_neuron(
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
-    ) -> Tuple[np.array, np.array]:
+    ) -> Tuple[np.array, np.array, np.array]:
         """
         Simulate the LIF dynamics with external input current
 
@@ -23,6 +23,7 @@ class LIF_Model2(TimestepSimulation):
         Returns:
         rec_v      : membrane potential
         rec_sp     : spike times
+        reset_trace: reset voltage over time
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
@@ -31,6 +32,8 @@ class LIF_Model2(TimestepSimulation):
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
         V_reset_it = neuron.V_reset_mV
+
+        reset_trace = np.full(simulation_steps, np.nan)
 
         # Set current time course
         # Iinj = Iinj * np.ones(sim_steps)
@@ -57,7 +60,7 @@ class LIF_Model2(TimestepSimulation):
                     # This spike is a doublet!
                     rec_spikes.append(it)  # record spike event
                     ##ONLY FOR MAKING DOUBLETS EVEN MORE VISIBLE!!
-                    v[it - 1] = 0
+                    # Removed line: v[it - 1] = 0
                     last_spike_counter = 0.0
                     # After doublet reset voltage is even lower!!#
                     V_reset_it = neuron.V_reset_mV - 10  # 20 is an arbitrary value..
@@ -75,6 +78,8 @@ class LIF_Model2(TimestepSimulation):
                     tr = neuron.tref / timestep  # set refractory time
                     last_spike_counter = 0.0
 
+            reset_trace[it] = V_reset_it
+
             # Calculate the increment of the membrane potential
             dv = (
                 -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
@@ -89,4 +94,4 @@ class LIF_Model2(TimestepSimulation):
         rec_spikes = np.array(rec_spikes) * timestep
         # print(doub_count)
 
-        return v, rec_spikes
+        return v, rec_spikes, reset_trace

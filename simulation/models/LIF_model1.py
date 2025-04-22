@@ -11,7 +11,7 @@ class LIF_Model1(TimestepSimulation):
     @staticmethod
     def simulate_neuron(
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
-    ) -> Tuple[np.array, np.array]:
+    ) -> Tuple[np.array, np.array, np.array]:
         """
         Simulate the LIF dynamics with external input current
 
@@ -23,6 +23,7 @@ class LIF_Model1(TimestepSimulation):
         Returns:
         rec_v      : membrane potential
         rec_sp     : spike times
+        renshaw_trace : trace of renshaw inhibition state over time
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
@@ -30,6 +31,8 @@ class LIF_Model1(TimestepSimulation):
         # Initialize voltage
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
+
+        renshaw_trace = np.zeros(simulation_steps)
 
         # Set current time course
         # Iinj = Iinj * np.ones(sim_steps)
@@ -41,13 +44,15 @@ class LIF_Model1(TimestepSimulation):
             100 / timestep
         )  # time since spike, used for doublet interval (3-10ms).
         renshaw_inhib = False  # is renshaw cell inhibiting
-        renshaw_reset = 400 / timestep
+        renshaw_reset = 200 / timestep
         relax_counter = (
             renshaw_reset  # used to check for relaxation period for renshaw state.
         )
         doub_count = 0  # For testing purposes
 
         for it in range(simulation_steps - 1):
+
+            renshaw_trace[it] = float(renshaw_inhib)
 
             if relax_counter > renshaw_reset:
                 renshaw_inhib = False
@@ -81,9 +86,6 @@ class LIF_Model1(TimestepSimulation):
                 rec_spikes.append(it)  # record spike event
                 relax_counter = 0.0
                 renshaw_inhib = True
-                v[it - 1] = (
-                    neuron.V_th_mV + 20
-                )  ##ONLY FOR MAKING DOUBLETS MORE VISIBLE!!
                 v[it] = neuron.V_reset_mV  # reset voltage
                 tr = (
                     neuron.tref * 2 / timestep
@@ -105,4 +107,4 @@ class LIF_Model1(TimestepSimulation):
         rec_spikes = np.array(rec_spikes) * timestep
         # print(doub_count)
 
-        return v, rec_spikes
+        return v, rec_spikes, renshaw_trace
