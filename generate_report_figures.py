@@ -60,9 +60,6 @@ def plot_voltage_traces(
         ax = axs[i]
         ax.plot(time, v, label=f"Neuron {neuron.number}")
         for spike_time in sp:
-            spike_index = int(spike_time / DT)
-            if 0 <= spike_index < len(v):
-                v[spike_index] += 20  # show a voltage spike
             ax.axvline(spike_time, color="gray", ls="--", alpha=0.4, label="_nolegend_")
         for j in range(1, len(sp)):
             isi = sp[j] - sp[j - 1]

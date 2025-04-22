@@ -32,7 +32,7 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
         for spike_time in sp:
             spike_index = int(spike_time / DT)
             if 0 <= spike_index < len(v):
-                v[spike_index] += 20  # show a voltage spike
+                pass  # v[spike_index] += 20  # show a voltage spike
             ax.axvline(spike_time, color="gray", ls="--", alpha=0.4, label="_nolegend_")
         for j in range(1, len(sp)):
             isi = sp[j] - sp[j - 1]
@@ -92,9 +92,9 @@ def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
     outputs = []
     for neuron_data_pair in simulation_data:
         v, sp = neuron_data_pair[1]
-        if sp.size:
-            sp_num = (sp / DT).astype(int) - 1
-            v[sp_num] += 20  # draw nicer spikes
+        # if sp.size:
+        #     sp_num = (sp / DT).astype(int) - 1
+        #     v[sp_num] += 20  # draw nicer spikes
         outputs.append(v)
 
     plt.figure(figsize=(12, 6))
