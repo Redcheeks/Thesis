@@ -4,3 +4,9 @@ _build
 _toc.yml
 models/__pycache__
 *.pyc
+figures/LIF_Model1_inhibition.png
+figures/LIF_Model1_output.png
+figures/LIF_Model2_inhibition.png
+figures/LIF_Model2_output.png
+figures/LIF_Model3_inhibition.png
+figures/LIF_Model3_output.png
