@@ -164,8 +164,10 @@ class Neuron:
             )  # If difference exceeds 5 nA, set fixed reset voltage
 
         # Linear interpolation between V_th_mV and V_reset_mV
-        V_reset = self.V_th_mV + (delta_I / max_diff) * (self.V_th_mV - self.V_reset_mV)
-
+        V_reset = self.V_reset_mV + (delta_I / max_diff) * (
+            self.V_th_mV - self.V_reset_mV
+        )
+        # print(f"Reset: {V_reset:.2f} mV")
         return V_reset
 
     #### -------- MODEL 3 testing below!! -------
@@ -180,12 +182,12 @@ class Neuron:
         if delta_I >= max_diff:
             V_reset = self.V_reset_mV
         else:
-            V_reset = self.V_th_mV + (delta_I / max_diff) * (
+            V_reset = self.V_reset_mV + (delta_I / max_diff) * (
                 self.V_th_mV - self.V_reset_mV
             )
 
         V_reset -= inhib_level * 5  # up to 5 mV additional hyperpolarization
-        return max(V_reset, -90)
+        return V_reset
 
 
 class NeuronFactory:
