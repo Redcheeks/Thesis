@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters.
 from simulation.models.LIF_model1 import LIF_Model1  # class handling LIF models.
 from simulation.models.LIF_model2 import LIF_Model2  # class handling LIF models.
-from simulation.models.LIF_model2 import LIF_Model3  # class handling LIF models.
+from simulation.models.LIF_model3 import LIF_Model3  # class handling LIF models.
 from simulation.models.LIF_model_SIMPLE import LIF_SIMPLE  # class handling LIF models.
 from descending_drive import cortical_input  # script for creating current input.
 import seaborn as sns
@@ -14,7 +14,7 @@ T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 
 
-def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
+def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
     """Produces a membrane potential - Time plot for the given simulation results."""
 
     time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
@@ -22,11 +22,13 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     fig, ax = plt.subplots()
     for neuron_data_pair in simulation_data:
         v, sp = neuron_data_pair[1]
-        if sp.size:
-            sp_num = (sp / DT).astype(int) - 1
-            v[sp_num] += 20  # draw nicer spikes
-
         ax.plot(time, v, "-")
+        for spike_time in sp:
+            ax.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+        for j in range(1, len(sp)):
+            isi = sp[j] - sp[j - 1]
+            if 3 <= isi <= 10:
+                ax.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
 
     ax.set_ylim([-80, -20])
     ax.axhline(
@@ -38,7 +40,7 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
 
 
-def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
+def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
 
     freq = {}  # record freq over time for each neuron
     fig, ax = plt.subplots()
@@ -65,7 +67,7 @@ def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     ax.legend([neuron_data_pair[0].number for neuron_data_pair in simulation_data])
 
 
-def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
+def output_heatmat(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
 
     time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
     outputs = []
@@ -101,7 +103,7 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model2  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
+    model_choice = LIF_Model1  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
 
     ## -- Cortical input - simulation parameters -- ##
 
@@ -138,7 +140,7 @@ def _main():
         150,
         200,
         299,
-    ]  # Neurons to be modelled & plotted.
+    ]
 
     neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
     # neurons_to_simulate = all_neurons # OPTION: Use this to model all 300 neurons!
