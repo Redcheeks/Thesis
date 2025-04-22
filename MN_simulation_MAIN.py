@@ -26,7 +26,7 @@ def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
     fig.suptitle("Voltage Traces - {}".format(LIF_Model1.__name__), fontsize=16)
     axs = axs.flatten()
     for i, neuron_data_pair in enumerate(simulation_data):
-        neuron, (v, sp) = neuron_data_pair
+        neuron, (v, sp, trace) = neuron_data_pair
         ax = axs[i]
         ax.plot(time, v, label=f"Neuron {neuron.number}")
         for spike_time in sp:
@@ -64,7 +64,7 @@ def Freq_inst_plot(CI: np.array, simulation_data: List[Tuple[Neuron]]) -> None:
     freq = {}  # record freq over time for each neuron
     fig, ax = plt.subplots()
     for neuron_data_pair in simulation_data:
-        v, sp = neuron_data_pair[1]
+        v, sp, trace = neuron_data_pair[1]
 
         if len(sp) < 2:
             freq = 0  # Not enough spikes to compute frequency
@@ -122,7 +122,7 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model1  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
+    model_choice = LIF_Model3  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
 
     ## -- Cortical input - simulation parameters -- ##
 
@@ -152,13 +152,7 @@ def _main():
     )
     neuron_indexes = [50, 100, 250]  # Neurons to be modelled & plotted.
     neuron_indexes = [
-        5,
         50,
-        100,
-        120,
-        150,
-        200,
-        299,
     ]
 
     neurons_to_simulate = [all_neurons[i] for i in neuron_indexes]
