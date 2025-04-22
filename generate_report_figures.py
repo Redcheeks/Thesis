@@ -54,7 +54,7 @@ def plot_voltage_traces(
     rows = int(np.ceil(np.sqrt(len(simulation_data))))
     cols = int(np.ceil(len(simulation_data) / rows))
     fig, axs = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows), squeeze=False)
-    fig.suptitle(f"{model_name} - Voltage Traces", fontsize=16)
+    fig.suptitle(f"{model_name} - Voltage Traces", fontsize=16, y=0.98)
     axs = axs.flatten()
     for i, (neuron, (v, sp)) in enumerate(simulation_data):
         ax = axs[i]
@@ -84,7 +84,9 @@ def plot_voltage_traces(
         Line2D([0], [0], color="gray", ls="--", alpha=0.4, label="Spike"),
         Line2D([0], [0], color="blue", ls="--", lw=1, alpha=0.7, label="Doublet"),
     ]
-    fig.legend(handles=custom_lines, loc="upper center", ncol=2)
+    fig.legend(
+        handles=custom_lines, loc="upper center", bbox_to_anchor=(0.5, 0.94), ncol=2
+    )
     os.makedirs("figures", exist_ok=True)
     plt.savefig(f"figures/{model_name}_output.png")
 
@@ -98,7 +100,7 @@ def plot_inhibition_traces(
     fig, axs = plt.subplots(
         len(simulation_data), 2, figsize=(12, 4 * len(simulation_data))
     )
-    fig.suptitle(f"{model_name} - Voltage and Inhibition", fontsize=16)
+    fig.suptitle(f"{model_name} - Voltage and Inhibition", fontsize=16, y=0.98)
     if len(simulation_data) == 1:
         axs = [axs]
 
@@ -136,14 +138,16 @@ def plot_inhibition_traces(
         ax_i.set_title(f"Neuron {neuron.number} - Inhibition trace")
         ax_i.set_xlabel("Time (ms)")
 
-    plt.tight_layout()
     from matplotlib.lines import Line2D
 
     custom_lines = [
         Line2D([0], [0], color="gray", ls="--", alpha=0.4, label="Spike"),
         Line2D([0], [0], color="blue", ls="--", lw=1, alpha=0.7, label="Doublet"),
     ]
-    fig.legend(handles=custom_lines, loc="upper center", ncol=2)
+    fig.legend(
+        handles=custom_lines, loc="upper center", bbox_to_anchor=(0.5, 0.94), ncol=2
+    )
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     os.makedirs("figures", exist_ok=True)
     plt.savefig(f"figures/{model_name}_inhibition.png")
 

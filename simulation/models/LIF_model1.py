@@ -58,9 +58,11 @@ class LIF_Model1(TimestepSimulation):
                 renshaw_inhib = False
 
             if tr > 0:  # check if in refractory period
+                # TODO: could be a nice curve down rather than a steep drop
                 v[it] = neuron.V_reset_mV  # set voltage to reset
                 tr = tr - 1  # reduce running counter of refractory period
 
+            ## ---- NORMAL SPIKE ---- ##
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 rec_spikes.append(it)  # record spike event
                 last_spike_counter = 0.0
@@ -72,10 +74,11 @@ class LIF_Model1(TimestepSimulation):
                 else:
                     renshaw_inhib = True
 
+                v[it] = 20  # 20mV biologically accurate?
                 relax_counter = 0.0
-                v[it] = neuron.V_reset_mV  # reset voltage
+                # v[it] = neuron.V_reset_mV  # reset voltage
                 tr = neuron.tref / timestep  # set refractory time
-
+            ## ---- DOUBLET ---- ##
             elif (
                 (3 / timestep)
                 < last_spike_counter
@@ -86,7 +89,8 @@ class LIF_Model1(TimestepSimulation):
                 rec_spikes.append(it)  # record spike event
                 relax_counter = 0.0
                 renshaw_inhib = True
-                v[it] = neuron.V_reset_mV  # reset voltage
+                v[it] = 18  # slightly smaller spike for doublet
+                # v[it] = neuron.V_reset_mV  # reset voltage
                 tr = (
                     neuron.tref * 2 / timestep
                 )  # set new refractory time : double normal time.

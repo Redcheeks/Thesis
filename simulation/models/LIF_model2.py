@@ -48,33 +48,35 @@ class LIF_Model2(TimestepSimulation):
         for it in range(simulation_steps - 1):
 
             if tr > 0:  # check if in refractory period
-
-                v[it] = (
-                    V_reset_it  # set voltage to reset #TODO: When are we doing the calculation, final refractory step?!!
-                )
+                # TODO: could be a nice curve down rather than a steep drop
+                v[it] = V_reset_it  # set voltage to reset
 
                 tr = tr - 1  # reduce running counter of refractory period
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
+                ## ---- DOUBLET ---- ##
                 if last_spike_counter < 10 / timestep:
-                    # This spike is a doublet!
+
                     rec_spikes.append(it)  # record spike event
-                    ##ONLY FOR MAKING DOUBLETS EVEN MORE VISIBLE!!
-                    # Removed line: v[it - 1] = 0
+                    v[it] = 18  # 18mV for doublet
                     last_spike_counter = 0.0
-                    # After doublet reset voltage is even lower!!#
-                    V_reset_it = neuron.V_reset_mV - 10  # 20 is an arbitrary value..
-                    v[it] = V_reset_it  # set voltage to reset
+
+                    V_reset_it = (
+                        neuron.V_reset_mV - 10
+                    )  #  # After doublet reset voltage is even lower, 10 is an arbitrary value..
+                    # v[it + 1] = V_reset_it  # set voltage to reset
                     tr = (
                         neuron.tref * 2 / timestep
                     )  # set longer refractory time. Might not need this.
-
+                ## ---- NORMAL SPIKE ---- ##
                 else:
                     rec_spikes.append(it)  # record spike event
 
+                    v[it] = 20  # 20mV biologically accurate?
+
                     # ------- Calculate new reset voltage based on how close to rheobase current ------ #
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
-                    v[it] = V_reset_it  # set voltage to reset
+                    # v[it + 1] = V_reset_it  # set voltage to reset
                     tr = neuron.tref / timestep  # set refractory time
                     last_spike_counter = 0.0
 
