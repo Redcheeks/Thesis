@@ -45,39 +45,54 @@ class LIF_Model2(TimestepSimulation):
             100 / timestep
         )  # time since spike, used for doublet interval (3-10ms).
 
+        peak_voltage = 20
+
         for it in range(simulation_steps - 1):
 
             if tr > 0:  # check if in refractory period
-                # TODO: could be a nice curve down rather than a steep drop
-                v[it] = V_reset_it  # set voltage to reset
+                progress = (decay_steps - tr) / decay_steps
+                sharpness = 7  # controls steepness of early drop
+                curve_factor = 1 - np.exp(-sharpness * progress)
 
-                tr = tr - 1  # reduce running counter of refractory period
+                v[it] = peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
+                tr -= 1  # decrement refractory counter
+                if (
+                    tr > 1
+                ):  # after the last step we need to run the incremental potential for the next it.
+                    continue
+                else:
+                    v[it + 1] = V_reset_it  # lock in the final decay value
+                    continue
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 ## ---- DOUBLET ---- ##
                 if last_spike_counter < 10 / timestep:
 
                     rec_spikes.append(it)  # record spike event
-                    v[it] = 18  # 18mV for doublet
+                    peak_voltage = 18
+                    v[it] = peak_voltage
+                    # v[it] = neuron.V_reset_mV  # reset voltage
+                    # set new refractory time : double normal time.
+                    tr = neuron.tref * 2 / timestep
+                    decay_steps = tr
                     last_spike_counter = 0.0
 
-                    V_reset_it = (
-                        neuron.V_reset_mV - 10
-                    )  #  # After doublet reset voltage is even lower, 10 is an arbitrary value..
-                    # v[it + 1] = V_reset_it  # set voltage to reset
-                    tr = (
-                        neuron.tref * 2 / timestep
-                    )  # set longer refractory time. Might not need this.
+                    # After doublet reset voltage is even lower, 10 is an arbitrary value to simulate the intensified AHP!!
+                    V_reset_it = neuron.V_reset_mV - 10
+
                 ## ---- NORMAL SPIKE ---- ##
                 else:
                     rec_spikes.append(it)  # record spike event
 
-                    v[it] = 20  # 20mV biologically accurate?
-
-                    # ------- Calculate new reset voltage based on how close to rheobase current ------ #
-                    V_reset_it = neuron.calculate_v_reset(Iinj[it])
-                    # v[it + 1] = V_reset_it  # set voltage to reset
+                    peak_voltage = 20
+                    v[it] = peak_voltage  # 20mV more biologically accurate
                     tr = neuron.tref / timestep  # set refractory time
+                    decay_steps = tr
+                    # ------- Calculate new reset voltage based on how close to rheobase current
+                    # !! makes possible for delayed depolarization bump, however this increase of excitability doesnt decay...
+                    # very crude approximation that causes increased firing rate when near I_rheo but not close enough for doublets------ #
+                    V_reset_it = neuron.calculate_v_reset(Iinj[it])
+
                     last_spike_counter = 0.0
 
             reset_trace[it] = V_reset_it
