@@ -89,7 +89,6 @@ class LIF_Model1(TimestepSimulation):
                 v[it] = peak_voltage  # 20mV more biologically accurate
                 tr = neuron.tref / timestep  # set refractory time
                 decay_steps = tr
-                decay_slope = (neuron.V_reset_mV - peak_voltage) / decay_steps
 
                 relax_counter = 0.0
                 # v[it] = neuron.V_reset_mV  # reset voltage
@@ -112,7 +111,7 @@ class LIF_Model1(TimestepSimulation):
                     neuron.tref * 2 / timestep
                 )  # set new refractory time : double normal time.
                 decay_steps = tr
-                decay_slope = (neuron.V_reset_mV - peak_voltage) / decay_steps
+
                 doub_count += 1
 
             # Calculate the increment of the membrane potential
