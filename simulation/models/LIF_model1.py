@@ -48,6 +48,7 @@ class LIF_Model1(TimestepSimulation):
         relax_counter = (
             renshaw_reset  # used to check for relaxation period for renshaw state.
         )
+        peak_voltage = 20
         doub_count = 0  # For testing purposes
 
         for it in range(simulation_steps - 1):
@@ -58,9 +59,15 @@ class LIF_Model1(TimestepSimulation):
                 renshaw_inhib = False
 
             if tr > 0:  # check if in refractory period
-                # TODO: could be a nice curve down rather than a steep drop
-                v[it] = neuron.V_reset_mV  # set voltage to reset
-                tr = tr - 1  # reduce running counter of refractory period
+                v[it] = peak_voltage + decay_slope * (decay_steps - tr)
+                tr -= 1  # decrement refractory counter
+                if (
+                    tr > 1
+                ):  # after the last step we need to run the incremental potential for the next it.
+                    continue
+                else:
+                    v[it + 1] = neuron.V_reset_mV  # lock in the final decay value
+                    continue
 
             ## ---- NORMAL SPIKE ---- ##
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
@@ -74,10 +81,15 @@ class LIF_Model1(TimestepSimulation):
                 else:
                     renshaw_inhib = True
 
-                v[it] = 20  # 20mV biologically accurate?
+                peak_voltage = 20
+                v[it] = peak_voltage  # 20mV more biologically accurate
+                tr = neuron.tref / timestep  # set refractory time
+                decay_steps = tr
+                decay_slope = (neuron.V_reset_mV - peak_voltage) / decay_steps
+
                 relax_counter = 0.0
                 # v[it] = neuron.V_reset_mV  # reset voltage
-                tr = neuron.tref / timestep  # set refractory time
+
             ## ---- DOUBLET ---- ##
             elif (
                 (3 / timestep)
@@ -89,11 +101,14 @@ class LIF_Model1(TimestepSimulation):
                 rec_spikes.append(it)  # record spike event
                 relax_counter = 0.0
                 renshaw_inhib = True
-                v[it] = 18  # slightly smaller spike for doublet
+                peak_voltage = 18
+                v[it] = peak_voltage
                 # v[it] = neuron.V_reset_mV  # reset voltage
                 tr = (
                     neuron.tref * 2 / timestep
                 )  # set new refractory time : double normal time.
+                decay_steps = tr
+                decay_slope = (neuron.V_reset_mV - peak_voltage) / decay_steps
                 doub_count += 1
 
             # Calculate the increment of the membrane potential
