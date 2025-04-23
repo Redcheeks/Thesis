@@ -59,7 +59,11 @@ class LIF_Model1(TimestepSimulation):
                 renshaw_inhib = False
 
             if tr > 0:  # check if in refractory period
-                v[it] = peak_voltage + decay_slope * (decay_steps - tr)
+                progress = (decay_steps - tr) / decay_steps
+                sharpness = 7  # controls steepness of early drop
+                curve_factor = 1 - np.exp(-sharpness * progress)
+
+                v[it] = peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
                 tr -= 1  # decrement refractory counter
                 if (
                     tr > 1
