@@ -6,7 +6,10 @@ from neuron import Neuron, NeuronFactory
 from descending_drive import cortical_input
 from simulation.models.LIF_model1 import LIF_Model1
 from simulation.models.LIF_model2 import LIF_Model2
+from simulation.models.LIF_model2_v2 import LIF_Model2v2
+from simulation.models.LIF_model2_v3 import LIF_Model2v3
 from simulation.models.LIF_model3 import LIF_Model3
+from simulation.models.LIF_model3_v2 import LIF_Model3v2
 
 ## ------------- Simulation Parameters ------------- ##
 T = 1000  # Simulation Time [ms]
@@ -16,7 +19,7 @@ neuron_pool_size = 300  # Total number of Neurons in the pool
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 5  # Number of clusters
-max_I = 15  # Max input current (nA)
+max_I = 10  # Max input current (nA)
 CCoV = 0  # Cluster-common noise CoV (%)
 ICoV = 0  # Independent noise CoV (%)
 signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
@@ -24,7 +27,7 @@ freq = 2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [40, 50, 100, 160]
+NEURON_INDEXES: List[int] = [1, 40, 50, 100, 160]
 
 
 def run_model(
@@ -35,7 +38,7 @@ def run_model(
         Iinj = CI[: int(T / DT), neuron.number]
         output = model_class.simulate_neuron(T, DT, neuron=neuron, Iinj=Iinj)
         # output may have 2 or 3 or 4 elements depending on model
-        if model_class == LIF_Model3:
+        if model_class == LIF_Model3v2:
             voltage, spikes, inhib, reset = output
             results.append((neuron, (voltage, spikes, inhib, reset)))
         else:
@@ -99,19 +102,23 @@ def plot_inhibition_traces(
 ) -> None:
     time = np.linspace(0, len(CI) * DT, len(CI))
     # For Model 3, we want 3 columns (Voltage, Inhibition, Reset)
-    ncols = 3 if model_name == "LIF_Model3" else 2
+    ncols = 3 if model_name == "LIF_Model3v2" else 2
     figsize = (
         (16, 4 * len(simulation_data)) if ncols == 3 else (12, 4 * len(simulation_data))
     )
     fig, axs = plt.subplots(len(simulation_data), ncols, figsize=figsize)
-    fig.suptitle(f"{model_name} - Voltage and Inhibition", fontsize=16, y=0.98)
+    fig.suptitle(
+        f"{model_name} - Voltage and Inhibition, for Imax = {max_I}",
+        fontsize=16,
+        y=0.98,
+    )
     if len(simulation_data) == 1:
         axs = [axs]
 
     for i, data in enumerate(simulation_data):
         neuron = data[0]
         values = data[1]
-        if model_name == "LIF_Model3" and len(values) == 4:
+        if model_name == "LIF_Model3v2" and len(values) == 4:
             v, sp, inhib, reset = values
             # Voltage subplot
             ax_v = axs[i][0]
@@ -166,18 +173,20 @@ def plot_inhibition_traces(
             ax_v.set_ylabel("Membrane Potential (mV)")
             ax_v.set_title(f"Neuron {neuron.number} - Voltage")
 
-            # Inhibition or Reset trace
+            # Inhibition or Boost trace
             ax_i = axs[i][1]
-            if model_name == "LIF_Model2":
+            if model_name == "LIF_Model2v2":
                 ax_i.plot(time, inhib, color="r")
-                ax_i.set_ylabel("Reset Voltage (mV)")
-                ax_i.set_title(
-                    f"Neuron {neuron.number} - Excitability (via Reset Voltage)"
-                )
-            else:
+                ax_i.set_ylabel("ADP Boost")
+                ax_i.set_title(f"Neuron {neuron.number} - Excitability Boost factor")
+            elif model_name == "LIF_Model1":
                 ax_i.plot(time, inhib, color="r")
                 ax_i.set_ylabel("Inhibition Level")
                 ax_i.set_title(f"Neuron {neuron.number} - Inhibition trace")
+            else:
+                ax_i.plot(time, inhib, color="r")
+                ax_i.set_ylabel("Reset Voltage (mV)")
+                ax_i.set_title(f"Neuron {neuron.number} - Reset Voltage trace")
             for spike_time in sp:
                 ax_i.axvline(spike_time, color="gray", ls="--", alpha=0.4)
             # Add ISI blue lines for doublets
@@ -222,12 +231,13 @@ if __name__ == "__main__":
 
     # Run all models and plot
     for model_class, name in zip(
-        [LIF_Model1, LIF_Model2, LIF_Model3], ["LIF_Model1", "LIF_Model2", "LIF_Model3"]
+        [LIF_Model1, LIF_Model2, LIF_Model2v2, LIF_Model2v3, LIF_Model3v2],
+        ["LIF_Model1", "LIF_Model2", "LIF_Model2v2", "LIF_Model2v3", "LIF_Model3v2"],
     ):
         results = []
         for neuron in neurons:
             Iinj = CI[: int(T / DT), neuron.number]
-            if model_class == LIF_Model3:
+            if model_class == LIF_Model3v2:
                 voltage, spikes, inhibition, reset = model_class.simulate_neuron(
                     T, DT, neuron=neuron, Iinj=Iinj
                 )
