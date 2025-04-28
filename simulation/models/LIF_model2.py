@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE##
+##MODEL WITH VARIABLE RESET VOLTAGE FOR EXCITABILITY INCREASE!##
 
 
 class LIF_Model2(TimestepSimulation):
@@ -49,7 +49,9 @@ class LIF_Model2(TimestepSimulation):
 
         for it in range(simulation_steps - 1):
 
-            if tr > 0:  # check if in refractory period
+            if (
+                tr > 0
+            ):  # check if in refractory period, smooth voltage decay towards reset
                 progress = (decay_steps - tr) / decay_steps
                 sharpness = 7  # controls steepness of early drop
                 curve_factor = 1 - np.exp(-sharpness * progress)
