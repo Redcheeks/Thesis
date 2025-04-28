@@ -3,10 +3,10 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE AND EXCITABILITY DECAY FOR FULL DELKAYED DEPOLARIZATION##
+##MODEL WITH ADP/ EXCITABILITY BOOST & DECAY FOR FULL DELAYED DEPOLARIZATION SIM##
 
 
-class LIF_Model2(TimestepSimulation):
+class LIF_Model2v2(TimestepSimulation):
 
     @staticmethod
     def simulate_neuron(
@@ -33,8 +33,6 @@ class LIF_Model2(TimestepSimulation):
         v[0] = neuron.V_init_mV
         V_reset_it = neuron.V_reset_mV
 
-        reset_trace = np.full(simulation_steps, np.nan)
-
         # Set current time course
         # Iinj = Iinj * np.ones(sim_steps)
 
@@ -47,22 +45,39 @@ class LIF_Model2(TimestepSimulation):
 
         peak_voltage = 20
 
+        # --- Parameters for ADP boost and decay
+        adp_boost = 0.0  # Starts at zero
+        adp_tau = 5.0  # Time constant in ms
+        adp_peak = 2.0  # Maximum possible boost in mV
+        epsilon = 0.1  # Safety margin to not hit threshold alone
+        scaling_factor = 2.0  # mV per nA above rheobase
+        adp_timer = 0.0  # intilize boost window timer
+
+        boost_trace = np.zeros(simulation_steps)
+
         for it in range(simulation_steps - 1):
 
-            if tr > 0:  # check if in refractory period
+            if (
+                tr > 0
+            ):  # check if in refractory period, smooth voltage decay towards reset
                 progress = (decay_steps - tr) / decay_steps
                 sharpness = 7  # controls steepness of early drop
                 curve_factor = 1 - np.exp(-sharpness * progress)
 
                 v[it] = peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
                 tr -= 1  # decrement refractory counter
-                if (
-                    tr > 1
-                ):  # after the last step we need to run the incremental potential for the next it.
-                    continue
-                else:
-                    v[it + 1] = V_reset_it  # lock in the final decay value
-                    continue
+
+                if tr < 1:
+                    # Start ADP phase
+                    adp_duration = int(10 / timestep)  # 10ms ADP window
+                    adp_timer = adp_duration
+                    rheo_diff = max(0, Iinj[it] - neuron.I_rheobase)
+                    scaled_boost = min(adp_peak, rheo_diff * scaling_factor)
+                    adp_boost = scaled_boost
+                    boost_trace[it] = adp_boost
+
+                v[it + 1] = v[it]  # carry forward voltage even if refractory ends here
+                continue
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 ## ---- DOUBLET ---- ##
@@ -76,9 +91,12 @@ class LIF_Model2(TimestepSimulation):
                     tr = neuron.tref * 2 / timestep
                     decay_steps = tr
                     last_spike_counter = 0.0
+                    # Reset ADP effect after doublet
+                    adp_boost = 0.0
+                    adp_timer = 0
+                    boost_trace[it] = adp_boost
 
                     # After doublet reset voltage is even lower, 10 is an arbitrary value to simulate the intensified AHP!!
-                    V_reset_it = neuron.V_reset_mV - 10
 
                 ## ---- NORMAL SPIKE ---- ##
                 else:
@@ -88,14 +106,20 @@ class LIF_Model2(TimestepSimulation):
                     v[it] = peak_voltage  # 20mV more biologically accurate
                     tr = neuron.tref / timestep  # set refractory time
                     decay_steps = tr
-                    # ------- Calculate new reset voltage based on how close to rheobase current
-                    # !! makes possible for delayed depolarization bump, however this increase of excitability doesnt decay...
-                    # very crude approximation that causes increased firing rate when near I_rheo but not close enough for doublets------ #
-                    V_reset_it = neuron.calculate_v_reset(Iinj[it])
 
                     last_spike_counter = 0.0
+                    # At spike
 
-            reset_trace[it] = V_reset_it
+                    adp_duration = int(10 / timestep)  # 10ms worth of boost
+                    adp_timer = adp_duration
+
+                    # Scale boost based on input proximity to rheobase
+                    rheo_diff = max(0, Iinj[it] - neuron.I_rheobase)
+                    scaled_boost = min(
+                        adp_peak, rheo_diff * scaling_factor
+                    )  # e.g., 2.0 per nA
+                    adp_boost = scaled_boost
+                    boost_trace[it] = adp_boost
 
             # Calculate the increment of the membrane potential
             dv = (
@@ -103,12 +127,19 @@ class LIF_Model2(TimestepSimulation):
                 + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
             ) * (timestep / neuron.tau_ms)
 
-            # Update the membrane potential [mv]
-            v[it + 1] = v[it] + dv
+            # Update the membrane potential, normal or boosted [mv]
+            if adp_timer > 0:
+                v[it + 1] = v[it] + dv + adp_boost
+                adp_boost *= np.exp(-timestep / adp_tau)
+                boost_trace[it] = adp_boost
+                adp_timer -= 1
+            else:
+                v[it + 1] = v[it] + dv
+
             last_spike_counter += 1
 
         # Get spike times in ms
         rec_spikes = np.array(rec_spikes) * timestep
         # print(doub_count)
 
-        return v, rec_spikes, reset_trace
+        return v, rec_spikes, boost_trace
