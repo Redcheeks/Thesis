@@ -3,7 +3,8 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE + RESET IF NO DOUBLET (Delayed Depolarization bump as a "square wave"##
+##MODEL WITH VARIABLE RESET VOLTAGE + RESET IF NO DOUBLET (Delayed Depolarization bump as a "square wave")##
+## Also has post doublet depression thorugh increased t_ref and decreased V_reset.
 
 
 class LIF_Model2v3(TimestepSimulation):
@@ -57,7 +58,13 @@ class LIF_Model2v3(TimestepSimulation):
                 sharpness = 7  # controls steepness of early drop
                 curve_factor = 1 - np.exp(-sharpness * progress)
 
-                v[it] = peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
+                if excitability == -1:  # Go directly towards final reset
+                    v[it] = peak_voltage - (peak_voltage - V_reset_it) * curve_factor
+                else:  # go towards normal reset, then jump to excitment for delayed depolarization. Currently set to happen at the end of absolute refractory period...
+                    v[it] = (
+                        peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
+                    )
+
                 tr -= 1  # decrement refractory counter
                 if (
                     tr > 1
@@ -99,27 +106,30 @@ class LIF_Model2v3(TimestepSimulation):
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
+                    else:
+                        excitability = 0
 
                     last_spike_counter = 0.0
 
             ## SOURCE: From Kudina 1989 - increased exciytability for 20msec post spike for neurons that are able to produce doublets.
             # From Halonen 1977 - the ISI post doublet is approx 1.5 times the ISI of previous spikes. Assumed to be due to prolonged Afterhyperpolarization period. (Kudina 2013, Kudina 2010 and many more give similar numbers!)
             if (
-                last_spike_counter > 20 / timestep and excitability == 1
+                last_spike_counter > 2 / timestep and excitability == 1
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
                     neuron.V_reset_mV - V_reset_it
                 )  # Instant decay of delayed depolarization bump
                 V_reset_it = neuron.V_reset_mV
-            elif (
-                excitability == -1 and last_spike_counter > 50 / timestep
-            ):  # decreased excitability recovers after 50-200msec.. (Brooks 1950)
-                excitability = 0
-                v[it] = v[it] + (
-                    neuron.V_reset_mV - V_reset_it
-                )  # Instant decay of decreased excitability post doublet.
-                V_reset_it = neuron.V_reset_mV
+            # Post-doublet depression ends naturally, no need to reset it until next spike..
+            # elif (
+            #     excitability == -1 and last_spike_counter > 50 / timestep
+            # ):  # decreased excitability recovers after 50-200msec.. (Brooks 1950)
+            #     excitability = 0
+            #     v[it] = v[it] + (
+            #         neuron.V_reset_mV - V_reset_it
+            #     )  # Instant decay of decreased excitability post doublet.
+            #     V_reset_it = neuron.V_reset_mV
 
             reset_trace[it] = V_reset_it
 
