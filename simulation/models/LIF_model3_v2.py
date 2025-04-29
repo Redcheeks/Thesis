@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE AND post-doublet-depression##
+##MODEL WITH VARIABLE RESET VOLTAGE AND Double blocking?##
 
 
 class LIF_Model3v2(TimestepSimulation):
@@ -47,16 +47,35 @@ class LIF_Model3v2(TimestepSimulation):
             100 / timestep
         )  # time since spike, used for doublet interval (3-10ms).
 
+        peak_voltage = 20
+        excitability = 0  # Track if neuron has increased excitability, 1 = increased, 0 = normal, -1 = post doublet
         doublet_block = 0.0
 
         for it in range(simulation_steps - 1):
 
-            if tr > 0:  # check if in refractory period
-                # TODO: could be a nice curve down rather than a steep drop
-                v[it] = V_reset_it  # set voltage to reset
-                reset_trace[it] = V_reset_it
+            if (
+                tr > 0
+            ):  # check if in refractory period, smooth voltage decay towards reset
+                progress = (decay_steps - tr) / decay_steps
+                sharpness = 7  # controls steepness of early drop
+                curve_factor = 1 - np.exp(-sharpness * progress)
 
-                tr = tr - 1  # reduce running counter of refractory period
+                if excitability == -1:  # Go directly towards final reset
+                    v[it] = peak_voltage - (peak_voltage - V_reset_it) * curve_factor
+                else:  # go towards normal reset, then jump to excitment for delayed depolarization. Currently set to happen at the end of absolute refractory period...
+                    v[it] = (
+                        peak_voltage - (peak_voltage - neuron.V_reset_mV) * curve_factor
+                    )
+
+                tr -= 1  # decrement refractory counter
+                if (
+                    tr > 1
+                ):  # after the last step we need to run the incremental potential for the next it.
+                    continue
+                else:
+                    v[it + 1] = V_reset_it  # lock in the final decay value
+
+                    continue
 
             elif v[it] >= neuron.V_th_mV:
                 ## ---- DOUBLET ---- ##
@@ -65,23 +84,52 @@ class LIF_Model3v2(TimestepSimulation):
                     and Iinj[it] >= neuron.I_rheobase
                     and doublet_block < 0.5
                 ):
-                    v[it] = 18  # 18mV for doublet
                     rec_spikes.append(it)
+                    peak_voltage = 18  # 18mV for doublet
+                    v[it] = peak_voltage
+                    # set new refractory time : double normal time.
+                    tr = neuron.tref * 2 / timestep
+                    decay_steps = tr
                     last_spike_counter = 0.0
+
                     doublet_block = 1.0
                     V_reset_it = neuron.calculate_v_reset_MODEL3v2(
                         Iinj[it], doublet_block
                     )
-                    tr = neuron.tref * 2 / timestep
+                    excitability = -1
+
                 ## ---- NORMAL SPIKE ---- ##
                 else:
                     rec_spikes.append(it)
 
-                    v[it] = 20  # 20mV biologically accurate?
+                    peak_voltage = 20
+                    v[it] = peak_voltage  # 20mV more biologically accurate
+                    tr = neuron.tref / timestep  # set refractory time
+                    decay_steps = tr
+
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
-                    tr = neuron.tref / timestep
+
+                    if V_reset_it > neuron.V_reset_mV:
+                        excitability = 1
+                    else:
+                        excitability = 0
+
                     last_spike_counter = 0.0
-            reset_trace[it] = V_reset_it
+
+            if (
+                last_spike_counter > 2 / timestep and excitability == 1
+            ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
+                excitability = 0
+                v[it] = v[it] + (
+                    neuron.V_reset_mV - V_reset_it
+                )  # Instant decay of delayed depolarization bump
+                V_reset_it = neuron.V_reset_mV
+            # Calculate the increment of the membrane potential
+            dv = (
+                -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
+                + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
+            ) * (timestep / neuron.tau_ms)
+
             # Calculate the increment of the membrane potential
             dv = (
                 -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
@@ -95,6 +143,7 @@ class LIF_Model3v2(TimestepSimulation):
             doublet_block *= np.exp(-timestep / 500.0)
 
             inhib_trace[it] = doublet_block
+            reset_trace[it] = V_reset_it
 
         # for i in range(1, simulation_steps):
         #     if np.isnan(reset_trace[i]):
