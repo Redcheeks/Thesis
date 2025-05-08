@@ -138,14 +138,14 @@ def heatmap(data_to_plot):
     ax.invert_yaxis()
 
 
-def force_curve(data):
+def force_curve(data, data_name: str):
     # plot experimental force curve
 
     force = data["force"].flatten()
     time = np.arange(len(force)) / data["fs"].item()
 
     plt.plot(time, force, color="blue")
-    plt.title("Experimental Force Curve")
+    plt.title(f"Experimental Force Curve for {data_name}")
     plt.xlabel("Time (s)")
     plt.ylabel("Force (N)")
 
@@ -161,30 +161,33 @@ def _main():
 
     data_to_plot = trapezoid
 
-    plt.figure(figsize=(18, 6))
+    plt.figure(figsize=(18, 10))
 
     plt.subplot(2, 1, 1)
-    heatmap(data_to_plot)
+    force_curve(trapezoid, "Trapezoid")
 
     plt.subplot(2, 1, 2)
-    force_curve(data_to_plot)
-
-    plt.show()
+    force_curve(trapezoid_sinusoid2hz, "Trapezoid + 2hz Sinusoid")
 
     # Save the figure
 
-    data_filename = (
-        "trapezoid10mvc_sinusoid2hz5to15mvc"
-        if data_to_plot is trapezoid_sinusoid2hz
-        else "trapezoid20mvc"
-    )
+    # data_filename = (
+    #     "trapezoid10mvc_sinusoid2hz5to15mvc"
+    #     if data_to_plot is trapezoid_sinusoid2hz
+    #     else "trapezoid20mvc"
+    # )
+    # os.makedirs("figures", exist_ok=True)
+    # plt.savefig(
+    #     f"figures/experimental_heatmapANDforceCurve_{data_filename}.png",
+    # )
+
     os.makedirs("figures", exist_ok=True)
     plt.savefig(
-        f"figures/experimental_heatmapANDforceCurve_{data_filename}.png",
-        dpi=600,
-        bbox_inches="tight",
-        facecolor="white",
+        f"figures/force_curves.png",
     )
+
+    print("Figure generated in the 'figures/' folder.")
+    plt.show()
 
 
 if __name__ == "__main__":
