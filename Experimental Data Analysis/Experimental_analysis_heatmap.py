@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from typing import List, Tuple
 import seaborn as sns
 
-## Plotting code written with help of ChatGPT
+## Heatmap Plotting code written with help of ChatGPT
 
 
 def _main():
@@ -16,7 +16,7 @@ def _main():
 
     ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
 
-    data_to_plot = trapezoid_sinusoid2hz
+    data_to_plot = trapezoid
     # Plotting parameters
     threshold_low = 40  # yellow threshold
     threshold_high = 150  # doublet red threshold

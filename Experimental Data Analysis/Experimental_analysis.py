@@ -11,7 +11,7 @@ def _main():
 
     trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
 
-    data_to_plot = trapezoid_sinusoid2hz
+    data_to_plot = trapezoid
     plt.ion()  # Turn on interactive mode
 
     for ind in np.arange(
