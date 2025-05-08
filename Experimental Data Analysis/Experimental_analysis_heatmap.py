@@ -1,22 +1,15 @@
 import scipy.io
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple
 import seaborn as sns
 
-## Heatmap Plotting code written with help of ChatGPT
+## Heatmap Plotting code
 
 
-def _main():
-    # Import data
-    trapezoid_sinusoid2hz = scipy.io.loadmat(
-        "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
-    )
-    trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
+def heatmap(data_to_plot):
 
-    ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
-
-    data_to_plot = trapezoid
     # Plotting parameters
     threshold_low = 40  # yellow threshold
     threshold_high = 150  # doublet red threshold
@@ -72,7 +65,6 @@ def _main():
     cmap.set_bad(color="#d9d9d9")  # light gray for inactivity
     plt.style.use("default")  # light background
 
-    plt.figure(figsize=(18, 6))
     ax = sns.heatmap(
         padded_freq_matrix,
         cmap=cmap,
@@ -93,12 +85,6 @@ def _main():
     # Add colorbar label
     cbar = ax.collections[0].colorbar
     cbar.set_label("Instantaneous Frequency (Hz)", color="black")
-
-    # # Optional: Add vertical reference lines for event markers
-    # event_times_sec = [10, 20, 30]  # seconds
-    # for t_sec in event_times_sec:
-    #     bin_index = int((t_sec * fs) / window_size)
-    #     ax.axvline(x=bin_index, color="cyan", linestyle="--", linewidth=0.8)
 
     # Update axis text colors for light background
     ax.tick_params(colors="black")
@@ -149,9 +135,43 @@ def _main():
         ncol=3,
         frameon=False,
     )
+    ax.invert_yaxis()
+
+
+def force_curve(data):
+    # plot experimental force curve
+
+    force = data["force"].flatten()
+    time = np.arange(len(force)) / data["fs"].item()
+
+    plt.plot(time, force, color="blue")
+    plt.title("Experimental Force Curve")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Force (N)")
+
+
+def _main():
+
+    # Import data
+    trapezoid_sinusoid2hz = scipy.io.loadmat(
+        "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
+    )
+    trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
+    ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
+
+    data_to_plot = trapezoid
+
+    plt.figure(figsize=(18, 6))
+
+    plt.subplot(2, 1, 1)
+    heatmap(data_to_plot)
+
+    plt.subplot(2, 1, 2)
+    force_curve(data_to_plot)
+
+    plt.show()
 
     # Save the figure
-    import os
 
     data_filename = (
         "trapezoid10mvc_sinusoid2hz5to15mvc"
@@ -160,13 +180,11 @@ def _main():
     )
     os.makedirs("figures", exist_ok=True)
     plt.savefig(
-        f"figures/experimental_ifreq_heatmap_{data_filename}.png",
+        f"figures/experimental_heatmapANDforceCurve_{data_filename}.png",
         dpi=600,
         bbox_inches="tight",
         facecolor="white",
     )
-
-    plt.show()
 
 
 if __name__ == "__main__":

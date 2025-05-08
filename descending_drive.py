@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import scipy.signal as signal
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -167,24 +168,33 @@ def _main():
     T_dur = 1000  # Total time in ms
     dt = 0.1  # Time step in ms
     n_mn = 300  # Number of motor neurons
-    n_clust = 5  # Number of clusters
-    max_I = 10  # Max input current (nA)
-    CCoV = 0  # Common noise CoV (%)
-    ICoV = 0  # Independent noise CoV (%)
+    n_clust = 3  # Number of clusters
+    max_I = 9  # Max input current (nA)
+    CCoV = 5  # Common noise CoV (%)
+    ICoV = 5  # Independent noise CoV (%)
+    signal_shape = "step-sinusoid"
+    freq = 2
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "step-sinusoid")
+    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, signal_shape, freq)
 
     # Plot the first motor neuron's cortical input
     plt.figure(1, figsize=(8, 6))
     time = np.linspace(0, T_dur, CI.shape[0])
-    for i in range(5):  # Plot first 5 neurons
-        plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
-
-    plt.plot(time, CI[:, 100], label=f"Neuron {100}")
-    plt.plot(time, CI[:, 200], label=f"Neuron {200}")
+    # for i in range(5):  # Plot first 5 neurons
+    # plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
+    plt.plot(time, CI[:, 50], label=f"Neuron {50}")
+    # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
+    # plt.plot(time, CI[:, 250], label=f"Neuron {250}")
+    plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (ms)")
     plt.ylabel("Current (nA)")
-    plt.title("Cortical Input for Multiple Neurons")
+    plt.title(f"Cortical Input for Neuron {50}")
+
+    os.makedirs("figures", exist_ok=True)
+    if CCoV > 0 or ICoV > 0:
+        plt.savefig(f"figures/CI_{signal_shape}_withNoise.png")
+    else:
+        plt.savefig(f"figures/CI_{signal_shape}.png")
 
     # plt.figure(2, figsize=(12, 6))
     # sns.heatmap(
@@ -200,7 +210,7 @@ def _main():
 
     # print(std_activity / mean_activity)
 
-    # print("Mean cortical input per neuron:")S
+    # print("Mean cortical input per neuron:")
     # print(mean_activity)
 
     # print("\nStandard deviation per neuron:")

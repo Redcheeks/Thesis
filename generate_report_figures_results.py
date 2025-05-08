@@ -18,7 +18,7 @@ neuron_pool_size = 300  # Total number of Neurons in the pool
 
 ## ------ Cortical input Simulation Parameters ------ ##
 
-number_of_clusters = 5  # Number of clusters
+number_of_clusters = 3  # Number of clusters
 max_I = 9  # Max input current (nA)
 CCoV = 5  # Cluster-common noise CoV (%)
 ICoV = 5  # Independent noise CoV (%)
@@ -182,7 +182,7 @@ def plot_inhibition_traces(
                 ax_i.set_ylabel("ADP Boost")
                 ax_i.set_title(f"Neuron {neuron.number} - Excitability Boost factor")
             elif model_name == "LIF_Model1":
-                ax_i.plot(time, inhib, color="r")
+                ax_i.plot(time, inhib, color="orange")
                 ax_i.set_ylabel("Inhibition Level")
                 ax_i.set_title(f"Neuron {neuron.number} - Inhibition trace")
             else:
@@ -212,8 +212,28 @@ def plot_inhibition_traces(
     plt.savefig(f"figures/{model_name}_inhibition.png")
 
 
+def plot_cortical_input(CI: np.ndarray):
+
+    plt.figure(1, figsize=(8, 6))
+    time = np.linspace(0, T, CI.shape[0])
+
+    plt.plot(time, CI[:, 50], label=f"Neuron {50}")
+    # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
+    # plt.plot(time, CI[:, 250], label=f"Neuron {250}")
+    plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Current (nA)")
+    plt.title(f"Cortical Input for Neuron {50}")
+
+    os.makedirs("figures", exist_ok=True)
+    if CCoV > 0 or ICoV > 0:
+        plt.savefig(f"figures/CI_{signal_type}_withNoise.png")
+    else:
+        plt.savefig(f"figures/CI_{signal_type}.png")
+
+
 if __name__ == "__main__":
-    # Create input and neurons
+    # Create input
     CI = cortical_input(
         neuron_pool_size,
         number_of_clusters,
@@ -231,10 +251,10 @@ if __name__ == "__main__":
     )
     neurons = [all_neurons[i] for i in NEURON_INDEXES]
 
-    # Run all models and plot
+    # Run models 1,2 and 3 and plot voltage trace, optional: inhibition, excitation
     for model_class, name in zip(
-        [LIF_Model2v3, LIF_Model3, LIF_Model3v2],
-        ["LIF_Model2v3", "LIF_Model3", "LIF_Model3v2"],
+        [LIF_Model1, LIF_Model2v3, LIF_Model3v2],
+        ["LIF_Model1", "LIF_Model2v3", "LIF_Model3v2"],
     ):
         results = []
         for neuron in neurons:
