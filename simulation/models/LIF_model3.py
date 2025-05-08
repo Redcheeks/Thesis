@@ -4,6 +4,7 @@ from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
 ##MODEL WITH VARIABLE RESET VOLTAGE AND Inhibition decay factor...##
+# inhibition affects the variable reset voltage calculated in neuron.py class.
 
 
 class LIF_Model3(TimestepSimulation):

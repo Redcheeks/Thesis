@@ -4,6 +4,7 @@ from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
 ##MODEL WITH ADP/ EXCITABILITY BOOST & DECAY FOR FULL DELAYED DEPOLARIZATION SIM##
+# Uncomplete model exploring an alternative approach without the adjusted reset voltage.
 
 
 class LIF_Model2v2(TimestepSimulation):

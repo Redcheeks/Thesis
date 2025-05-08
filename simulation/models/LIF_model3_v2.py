@@ -4,6 +4,7 @@ from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
 ##MODEL WITH VARIABLE RESET VOLTAGE AND Rheobase limit + Decaying Doublet blocking##
+# Rheobase and doublet block are conditions which affect doublet production
 
 
 class LIF_Model3v2(TimestepSimulation):

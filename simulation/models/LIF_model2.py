@@ -4,6 +4,7 @@ from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
 ##MODEL WITH VARIABLE RESET VOLTAGE FOR EXCITABILITY INCREASE!##
+# This is a old version, it lacks the excitability decay/reset!
 
 
 class LIF_Model2(TimestepSimulation):
