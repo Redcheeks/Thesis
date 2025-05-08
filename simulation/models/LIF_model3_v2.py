@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE AND Double blocking?##
+##MODEL WITH VARIABLE RESET VOLTAGE AND Rheobase limit + Decaying Doublet blocking##
 
 
 class LIF_Model3v2(TimestepSimulation):
@@ -82,7 +82,8 @@ class LIF_Model3v2(TimestepSimulation):
                 if (
                     last_spike_counter < 10 / timestep
                     and Iinj[it] >= neuron.I_rheobase
-                    and doublet_block < 0.5
+                    and doublet_block
+                    < 0.5  # Adjust this threshold on how long to block for, could be neuron-dependant..
                 ):
                     rec_spikes.append(it)
                     peak_voltage = 18  # 18mV for doublet
@@ -93,9 +94,8 @@ class LIF_Model3v2(TimestepSimulation):
                     last_spike_counter = 0.0
 
                     doublet_block = 1.0
-                    V_reset_it = neuron.calculate_v_reset_MODEL3v2(
-                        Iinj[it], doublet_block
-                    )
+                    V_reset_it = neuron.V_reset_mV - 10
+                    # Doublet block does not impact reset voltage.
                     excitability = -1
 
                 ## ---- NORMAL SPIKE ---- ##
@@ -108,6 +108,7 @@ class LIF_Model3v2(TimestepSimulation):
                     decay_steps = tr
 
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
+                    doublet_block = 1.0
 
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
@@ -130,12 +131,6 @@ class LIF_Model3v2(TimestepSimulation):
                 + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
             ) * (timestep / neuron.tau_ms)
 
-            # Calculate the increment of the membrane potential
-            dv = (
-                -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
-                + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
-            ) * (timestep / neuron.tau_ms)
-
             # Update the membrane potential [mv]
             v[it + 1] = v[it] + dv
             last_spike_counter += 1
@@ -144,10 +139,6 @@ class LIF_Model3v2(TimestepSimulation):
 
             inhib_trace[it] = doublet_block
             reset_trace[it] = V_reset_it
-
-        # for i in range(1, simulation_steps):
-        #     if np.isnan(reset_trace[i]):
-        #         reset_trace[i] = reset_trace[i - 1]
 
         # Get spike times in ms
         rec_spikes = np.array(rec_spikes) * timestep

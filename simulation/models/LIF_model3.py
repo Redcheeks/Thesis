@@ -77,35 +77,40 @@ class LIF_Model3(TimestepSimulation):
 
                     continue
 
-            elif v[it] >= neuron.V_th_mV:
+            elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 ## ---- DOUBLET ---- ##
                 if last_spike_counter < 10 / timestep:
-                    rec_spikes.append(it)
+                    rec_spikes.append(it)  # record spike event
                     peak_voltage = 18  # 18mV for doublet
                     v[it] = peak_voltage
+
                     # set new refractory time : double normal time.
                     tr = neuron.tref * 2 / timestep
                     decay_steps = tr
                     last_spike_counter = 0.0
 
-                    inhib_decay_factor += 1.0
-                    V_reset_it = neuron.calculate_v_reset_MODEL3(
-                        Iinj[it], inhib_decay_factor
-                    )
-
+                    inhib_decay_factor = 1.0
+                    # After doublet reset voltage is even lower, 10 is an arbitrary value to simulate the intensified AHP!!
+                    V_reset_it = neuron.V_reset_mV - 10
                     excitability = -1
 
                 ## ---- NORMAL SPIKE ---- ##
                 else:
-                    rec_spikes.append(it)
+                    rec_spikes.append(it)  # record spike event
 
                     peak_voltage = 20
                     v[it] = peak_voltage  # 20mV more biologically accurate
                     tr = neuron.tref / timestep  # set refractory time
                     decay_steps = tr
 
+                    # ------- Calculate new reset voltage based on how close to rheobase current, taking inhibition into account!
+                    # simulates delayed depolarization bump and its intensity decay over time.
+
                     V_reset_it = neuron.calculate_v_reset_MODEL3(
                         Iinj[it], inhib_decay_factor
+                    )
+                    inhib_decay_factor = (
+                        1.0  # After every spike, inhibition is back to full.
                     )
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
@@ -114,6 +119,7 @@ class LIF_Model3(TimestepSimulation):
 
                     last_spike_counter = 0.0
 
+            ## See comments in LIF_Model2v3 for more info on below code.
             if (
                 last_spike_counter > 2 / timestep and excitability == 1
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
