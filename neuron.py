@@ -149,40 +149,44 @@ class Neuron:
     #     return 1 / self.R_Mohm * 10  # Leak Conductance [μS]
 
     # _______ Helper Functions ________#
-    def calculate_v_reset(self, Iinj_it):  ##DONT TOUCH THIS FUNCTION!
+    def calculate_v_reset(
+        self, Iinj_it
+    ):  # Used by Model2 (all versions) and LIF_model3_v2.py
         """
         Calculates a linearly distributed reset voltage based on the injected current.
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
         #TODO : How far is the increased excitability distributed?
         """
         delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
-        max_diff = 5  # 5 nA
+        max_rheobase_diff = 5  # 5 nA
 
-        if delta_I >= max_diff:
+        if delta_I >= max_rheobase_diff:
             return (
                 self.V_reset_mV
             )  # If difference exceeds 5 nA, set fixed reset voltage
 
         # Linear interpolation between V_th_mV and V_reset_mV
-        V_reset = self.V_reset_mV + (delta_I / max_diff) * (
+        V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
             self.V_th_mV - self.V_reset_mV
         )
         # print(f"Reset: {V_reset:.2f} mV")
         return V_reset
 
     #### -------- MODEL 3 method below!! -------
-    def calculate_v_reset_MODEL3(self, Iinj_it, inhib_level: float = 0.0):
+    def calculate_v_reset_MODEL3(
+        self, Iinj_it, inhib_level: float = 0.0
+    ):  # Used by LIF_model3.py
         """
         Calculates a dynamic reset voltage based on the injected current and a decaying inhibition level.
         Simulates decreased excitability following a doublet spike.
         """
         delta_I = abs(self.I_rheobase - Iinj_it)
-        max_diff = 5  # nA
+        max_rheobase_diff = 5  # nA
 
-        if delta_I >= max_diff:
+        if delta_I >= max_rheobase_diff:
             V_reset = self.V_reset_mV
         else:
-            V_reset = self.V_reset_mV + (delta_I / max_diff) * (
+            V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
                 self.V_th_mV - self.V_reset_mV
             )
 
