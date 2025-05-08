@@ -20,14 +20,14 @@ neuron_pool_size = 300  # Total number of Neurons in the pool
 
 number_of_clusters = 5  # Number of clusters
 max_I = 9  # Max input current (nA)
-CCoV = 0  # Cluster-common noise CoV (%)
-ICoV = 0  # Independent noise CoV (%)
-signal_type = "trapezoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+CCoV = 5  # Cluster-common noise CoV (%)
+ICoV = 5  # Independent noise CoV (%)
+signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
 freq = 2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [1, 10, 20, 40]
+NEURON_INDEXES: List[int] = [1, 10, 50, 150]
 
 
 def run_model(
@@ -108,7 +108,7 @@ def plot_inhibition_traces(
     )
     fig, axs = plt.subplots(len(simulation_data), ncols, figsize=figsize)
     fig.suptitle(
-        f"{model_name} - Voltage and Inhibition, for Imax = {max_I}",
+        f"{model_name} - Voltage and Inhibition, for Imax = {max_I}, with signal-type = {signal_type}",
         fontsize=16,
         y=0.98,
     )
