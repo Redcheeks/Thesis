@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##BASIC LIF MODEL - Used to create output plot for thesis, not accurate modelling##
+## Used to create theoretical output plot for thesis, not accurate modelling!##
 
 
 class LIF_Model_basic_theory(TimestepSimulation):
@@ -13,16 +13,17 @@ class LIF_Model_basic_theory(TimestepSimulation):
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
     ) -> Tuple[np.array, np.array]:
         """
-        Simulate the LIF dynamics with external input current
+        Simulate the Basic LIF dynamics with external input current
 
         Args:
-        neuron       : Neuron object containing parameters
-        Iinj       : input current [nA]. The injected current here can be a value
-                    or an array
+        sim_time    : Simulation run-time (ms)
+        dt          : time step (ms)
+        neuron      : Neuron object containing parameters
+        Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
         Returns:
-        rec_v      : membrane potential
-        rec_sp     : spike times
+        rec_v      : membrane potential array
+        rec_sp     : spike times array
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
