@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##Most Simple LIF with no doublets##
+##Most Simple LIF model with no doublets, based on Neuromatch (W2D3)##
 
 
 class LIF_SIMPLE(TimestepSimulation):
@@ -16,13 +16,14 @@ class LIF_SIMPLE(TimestepSimulation):
         Simulate the Basic LIF dynamics with external input current
 
         Args:
-        neuron       : Neuron object containing parameters
-        Iinj       : input current [nA]. The injected current here can be a value
-                    or an array
+        sim_time    : Simulation run-time (ms)
+        dt          : time step (ms)
+        neuron      : Neuron object containing parameters
+        Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
         Returns:
-        rec_v      : membrane potential
-        rec_sp     : spike times
+        rec_v      : membrane potential array
+        rec_sp     : spike times array
         """
 
         simulation_steps = len(np.arange(0, sim_time, dt))
@@ -31,9 +32,6 @@ class LIF_SIMPLE(TimestepSimulation):
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
 
-        # Set current time course
-        # Iinj = Iinj * np.ones(sim_steps)
-
         # Loop over time
         rec_spikes = []  # record spike times
         tr = 0.0  # the count for refractory duration
@@ -41,7 +39,7 @@ class LIF_SIMPLE(TimestepSimulation):
         for it in range(simulation_steps - 1):
 
             if tr > 0:  # check if in refractory period
-                v[it] = neuron.V_reset_mV  # set voltage to reset
+                v[it] = neuron.V_reset_mV  # keep voltage at reset
                 tr = tr - 1  # reduce running counter of refractory period
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
@@ -49,7 +47,7 @@ class LIF_SIMPLE(TimestepSimulation):
                 v[it] = neuron.V_reset_mV  # reset voltage
                 tr = neuron.tref / dt  # set refractory time
 
-            # Calculate the increment of the membrane potential
+            # Calculate the increment of the membrane potential for each time-step
             dv = (
                 -(neuron.gain_leak) * (v[it] - neuron.E_L_mV)
                 + (neuron.gain_exc) * (Iinj[it] * neuron.R_Mohm)
@@ -60,6 +58,5 @@ class LIF_SIMPLE(TimestepSimulation):
 
         # Get spike times in ms
         rec_spikes = np.array(rec_spikes) * dt
-        # print(doub_count)
 
         return v, rec_spikes
