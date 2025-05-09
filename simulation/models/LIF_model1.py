@@ -3,7 +3,7 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL BASED ON RHEOBASE CURRENT LIMIT##
+##MODEL1 LIF with doublets using RHEOBASE CURRENT threshold##
 
 
 class LIF_Model1(TimestepSimulation):
@@ -13,17 +13,18 @@ class LIF_Model1(TimestepSimulation):
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
     ) -> Tuple[np.array, np.array, np.array]:
         """
-        Simulate the LIF dynamics with external input current
+        Model1: Simulate the Basic LIF dynamics WITH DOUBLETS with external input current
 
         Args:
-        neuron       : Neuron object containing parameters
-        Iinj       : input current [nA]. The injected current here can be a value
-                    or an array
+        sim_time    : Simulation run-time (ms)
+        timestep    : time step (ms)
+        neuron      : Neuron object containing parameters
+        Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
         Returns:
-        rec_v      : membrane potential
-        rec_sp     : spike times
-        renshaw_trace : trace of renshaw inhibition state over time
+        rec_v           : recorded membrane potential [array]
+        rec_sp          : recorded spike times [array]
+        inhib_trace     : trace of inhibition/doublet blocking state over time [array]
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
@@ -32,10 +33,7 @@ class LIF_Model1(TimestepSimulation):
         v = np.zeros(simulation_steps)
         v[0] = neuron.V_init_mV
 
-        renshaw_trace = np.zeros(simulation_steps)
-
-        # Set current time course
-        # Iinj = Iinj * np.ones(sim_steps)
+        inhib_trace = np.zeros(simulation_steps)
 
         # Loop over time
         rec_spikes = []  # record spike times
@@ -53,7 +51,7 @@ class LIF_Model1(TimestepSimulation):
 
         for it in range(simulation_steps - 1):
 
-            renshaw_trace[it] = float(renshaw_inhib)
+            inhib_trace[it] = float(renshaw_inhib)
 
             if relax_counter > renshaw_reset:
                 renshaw_inhib = False
@@ -129,4 +127,4 @@ class LIF_Model1(TimestepSimulation):
         rec_spikes = np.array(rec_spikes) * timestep
         # print(doub_count)
 
-        return v, rec_spikes, renshaw_trace
+        return v, rec_spikes, inhib_trace

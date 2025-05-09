@@ -14,18 +14,19 @@ class LIF_Model3v2(TimestepSimulation):
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
     ) -> Tuple[np.array, np.array, np.array, np.array]:
         """
-        Simulate the LIF dynamics with external input current
+        Model3v2: Simulate the Basic LIF dynamics  + ADP AND RHEOBASE THRESHOLD with external input current
 
         Args:
-        neuron       : Neuron object containing parameters
-        Iinj       : input current [nA]. The injected current here can be a value
-                    or an array
+        sim_time    : Simulation run-time (ms)
+        timestep    : time step (ms)
+        neuron      : Neuron object containing parameters
+        Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
         Returns:
-        rec_v      : membrane potential
-        rec_sp     : spike times
-        inhib_trace: inhibition decay factor over time
-        reset_trace: reset voltage trace over time
+        rec_v           : recorded membrane potential [array]
+        rec_sp          : recorded spike times [array]
+        inhib_trace     : trace of inhibition over time [array]
+        reset_trace     : reset voltage over time [array]
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
@@ -37,9 +38,6 @@ class LIF_Model3v2(TimestepSimulation):
 
         inhib_trace = np.zeros(simulation_steps)
         reset_trace = np.full(simulation_steps, np.nan)
-
-        # Set current time course
-        # Iinj = Iinj * np.ones(sim_steps)
 
         # Loop over time
         rec_spikes = []  # record spike times
@@ -84,7 +82,7 @@ class LIF_Model3v2(TimestepSimulation):
                     last_spike_counter < 10 / timestep
                     and Iinj[it] >= neuron.I_rheobase
                     and doublet_block
-                    < 0.5  # Adjust this threshold on how long to block for, could be neuron-dependant..
+                    < 0.5  # Adjust this threshold on how long to block for, future change: could be neuron-dependent..
                 ):
                     rec_spikes.append(it)
                     peak_voltage = 18  # 18mV for doublet

@@ -14,17 +14,18 @@ class LIF_Model2v3(TimestepSimulation):
         sim_time: np.float64, timestep: np.float64, neuron: Neuron, Iinj: np.array
     ) -> Tuple[np.array, np.array, np.array]:
         """
-        Simulate the LIF dynamics with external input current
+        Model2: Simulate the Basic LIF dynamics WITH ADP with external input current
 
         Args:
-        neuron       : Neuron object containing parameters
-        Iinj       : input current [nA]. The injected current here can be a value
-                    or an array
+        sim_time    : Simulation run-time (ms)
+        timestep    : time step (ms)
+        neuron      : Neuron object containing parameters
+        Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
         Returns:
-        rec_v      : membrane potential
-        rec_sp     : spike times
-        reset_trace: reset voltage trace over time
+        rec_v           : recorded membrane potential [array]
+        rec_sp          : recorded spike times [array]
+        reset_trace     : reset voltage over time [array]
         """
 
         simulation_steps = len(np.arange(0, sim_time, timestep))
@@ -35,9 +36,6 @@ class LIF_Model2v3(TimestepSimulation):
         V_reset_it = neuron.V_reset_mV
 
         reset_trace = np.full(simulation_steps, np.nan)
-
-        # Set current time course
-        # Iinj = Iinj * np.ones(sim_steps)
 
         # Loop over time
         rec_spikes = []  # record spike times

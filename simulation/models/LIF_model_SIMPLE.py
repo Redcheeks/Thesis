@@ -21,9 +21,9 @@ class LIF_SIMPLE(TimestepSimulation):
         neuron      : Neuron object containing parameters
         Iinj        : input current [nA]. The injected current should be an array of the same length as sim_time/dt
 
-        Returns:
-        rec_v      : membrane potential array
-        rec_sp     : spike times array
+         Returns:
+        rec_v           : recorded membrane potential [array]
+        rec_sp          : recorded spike times [array]
         """
 
         simulation_steps = len(np.arange(0, sim_time, dt))
