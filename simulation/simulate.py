@@ -6,7 +6,7 @@ from typing import Tuple
 
 class TimestepSimulation(ABC):
 
-    # method to run simulation for one neuron
+    # method to run simulation for one neuron, Implemented in model classes.
     @staticmethod
     @abstractmethod
     def simulate_neuron(
@@ -15,6 +15,6 @@ class TimestepSimulation(ABC):
         pass
 
 
-# method to run simulation for group of neurons
+# PLACEHOLDER : method to run simulation for group of neurons
 def simulate_neuron_ensamble(self):
     pass

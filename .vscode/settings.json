@@ -8,5 +8,14 @@
         "test_*.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "models_legacy": true,
+        "OLD---run_MAIN.py": true,
+        "plot_param.py": true,
+        "comparing_parameter_calc.py": true,
+        "scripts/": true,
+        ".pylintrc": true
+    }
 }
