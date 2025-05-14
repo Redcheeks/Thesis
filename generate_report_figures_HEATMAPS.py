@@ -246,50 +246,6 @@ def plot_model3_synaptic_input(CI):
     plt.ylabel("Synaptic Input (nA)")
 
 
-def plot_neuron_output(CI: np.ndarray):
-    time = np.linspace(0, len(CI) * DT, len(CI))
-    import math
-
-    rows = int(np.ceil(np.sqrt(len(simulation_data))))
-    cols = int(np.ceil(len(simulation_data) / rows))
-    fig, axs = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows), squeeze=False)
-    fig.suptitle(f"{model_name} - Voltage Traces", fontsize=16, y=0.98)
-    axs = axs.flatten()
-    for i, (neuron, (v, sp)) in enumerate(simulation_data):
-        ax = axs[i]
-        ax.plot(time, v, label=f"Neuron {neuron.number}")
-        for spike_time in sp:
-            ax.axvline(spike_time, color="gray", ls="--", alpha=0.4, label="_nolegend_")
-        for j in range(1, len(sp)):
-            isi = sp[j] - sp[j - 1]
-            if 3 <= isi <= 10:
-                ax.axvline(
-                    sp[j], color="blue", ls="--", lw=1, alpha=0.7, label="_nolegend_"
-                )
-
-        ax.set_ylim([-80, -20])
-        ax.axhline(neuron.V_th_mV, color="k", ls="--", label="Threshold")
-        ax.set_ylabel("Membrane Potential (mV)")
-        ax.set_xlabel("Time (ms)")
-        ax.set_title(f"Neuron {neuron.number}")
-        ax.legend()
-    # Hide unused axes
-    for j in range(len(simulation_data), len(axs)):
-        fig.delaxes(axs[j])
-    # Custom legend for spike types
-    from matplotlib.lines import Line2D
-
-    custom_lines = [
-        Line2D([0], [0], color="gray", ls="--", alpha=0.4, label="Spike"),
-        Line2D([0], [0], color="blue", ls="--", lw=1, alpha=0.7, label="Doublet"),
-    ]
-    fig.legend(
-        handles=custom_lines, loc="upper center", bbox_to_anchor=(0.5, 0.94), ncol=2
-    )
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig(f"figures/{signal_type}_output.png")
-
-
 def generate_report_figure():
 
     CI = cortical_input(
