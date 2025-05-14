@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Type
@@ -34,6 +35,8 @@ def FI_curves(neuron, model):
         plt.plot(Iinj, freq, "o")
         plt.xlabel("Current [nA]")
         plt.ylabel("Frequency [Hz]")
+        plt.title(f"Neuron {neuron.number}")
+        plt.subplots_adjust(hspace=0.5, wspace=0.5)
 
 
 if __name__ == "__main__":
@@ -50,11 +53,13 @@ if __name__ == "__main__":
     plt.suptitle("F-I curves for Simple LIF model")
 
     for it, neuron in enumerate(neurons):  # for each neuron
-
         plt.subplot(2, 2, it + 1)
         FI_curves(neuron, model)
-        plt.title(f"Neuron {neuron.number}")
-        plt.subplots_adjust(hspace=0.5, wspace=0.5)
+
+    os.makedirs("figures/F-I", exist_ok=True)
+    plt.savefig(
+        f"figures/F-I/FI_simpleLIF.png",
+    )
 
     ## -------- I-F Curve for model 1 -------- ##
 
@@ -63,12 +68,13 @@ if __name__ == "__main__":
     plt.suptitle("F-I curves for LIF model 1 ")
 
     for it, neuron in enumerate(neurons):  # for each neuron
-
         plt.subplot(2, 2, it + 1)
         FI_curves(neuron, model)
-        plt.title(f"Neuron {neuron.number}")
-        plt.subplots_adjust(hspace=0.5, wspace=0.5)
 
+    os.makedirs("figures/F-I", exist_ok=True)
+    plt.savefig(
+        f"figures/F-I/FI_LIF1.png",
+    )
     ## -------- I-F Curve for model 2 -------- ##
 
     plt.figure(figsize=(10, 5))
@@ -76,12 +82,13 @@ if __name__ == "__main__":
     plt.suptitle("F-I curves for LIF model 2v3 ")
 
     for it, neuron in enumerate(neurons):  # for each neuron
-
         plt.subplot(2, 2, it + 1)
         FI_curves(neuron, model)
-        plt.title(f"Neuron {neuron.number}")
-        plt.subplots_adjust(hspace=0.5, wspace=0.5)
 
+    os.makedirs("figures/F-I", exist_ok=True)
+    plt.savefig(
+        f"figures/F-I/FI_LIF2.png",
+    )
     ## -------- I-F Curve for model 3 -------- ##
 
     plt.figure(figsize=(10, 5))
@@ -89,10 +96,12 @@ if __name__ == "__main__":
     plt.suptitle("F-I curves for LIF model 3v2 ")
 
     for it, neuron in enumerate(neurons):  # for each neuron
-
         plt.subplot(2, 2, it + 1)
         FI_curves(neuron, model)
-        plt.title(f"Neuron {neuron.number}")
-        plt.subplots_adjust(hspace=0.5, wspace=0.5)
+
+    os.makedirs("figures/F-I", exist_ok=True)
+    plt.savefig(
+        f"figures/F-I/FI_LIF3.png",
+    )
 
     plt.show()
