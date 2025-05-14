@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from neuron import NeuronFactory, Neuron  # dataclass used for neuron parameters.
 from simulation.models.LIF_model1 import LIF_Model1  # class handling LIF models.
-from simulation.models.LIF_model2 import LIF_Model2  # class handling LIF models.
-from simulation.models.LIF_model3 import LIF_Model3  # class handling LIF models.
 from simulation.models.LIF_model_SIMPLE import LIF_SIMPLE  # class handling LIF models.
 from descending_drive import cortical_input  # script for creating current input.
 import seaborn as sns
@@ -122,15 +120,15 @@ def _main():
 
     ## SELECT THE MODEL TO RUN
 
-    model_choice = LIF_Model3  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
+    model_choice = LIF_SIMPLE  # Options: LIF_SIMPLE, LIF_Model1, LIF_Model2, LIF_Model3
 
     ## -- Cortical input - simulation parameters -- ##
 
     number_of_clusters = 1  # Number of clusters
     max_I = 15  # Max input current (nA)
-    CCoV = 0  # Cluster-common noise CoV (%)
-    ICoV = 0  # Independent noise CoV (%)
-    signal_type = "step-sinusoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+    CCoV = 20  # Cluster-common noise CoV (%)
+    ICoV = 5  # Independent noise CoV (%)
+    signal_type = "trapezoid"  # Options:  "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
     freq = 2  # Frequency for sinusoid
 
     CI = cortical_input(
@@ -175,9 +173,18 @@ def _main():
 
     # TODO Some Plotting choices
 
-    Output_plots(CI, simulation_results)
-    Freq_inst_plot(CI, simulation_results)
+    # Output_plots(CI, simulation_results)
+    # Freq_inst_plot(CI, simulation_results)
     # output_heatmat(CI, simulation_results)
+
+    ISI = np.diff(simulation_results[0][1][1]) * 1e3  # to seconds
+
+    mean_ISI = ISI.mean(axis=0)
+    std_ISI = ISI.std(axis=0)
+    CoV_ISI = std_ISI / mean_ISI
+    print(f"mean ISI = {mean_ISI}")
+    print(f"std ISI = {std_ISI}")
+    print(f"mean CoV of ISI % = {np.mean(CoV_ISI)*100}")
 
     plt.show()
 

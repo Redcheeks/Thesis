@@ -5,8 +5,7 @@ from typing import List, Tuple, Type
 from neuron import Neuron, NeuronFactory
 from descending_drive import cortical_input
 from simulation.models.LIF_model1 import LIF_Model1
-from simulation.models.LIF_model2 import LIF_Model2
-from simulation.models.LIF_model2_v2 import LIF_Model2v2
+
 from simulation.models.LIF_model2_v3 import LIF_Model2v3
 from simulation.models.LIF_model3 import LIF_Model3
 from simulation.models.LIF_model3_v2 import LIF_Model3v2
