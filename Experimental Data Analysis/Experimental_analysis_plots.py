@@ -158,13 +158,12 @@ def heatmap(data_to_plot):
     )
     ax.invert_yaxis()
 
-    # Overlay force curve on secondary y-axis
+    ## ------------ Overlay force curve on secondary y-axis
     ax2 = ax.twinx()
     time = np.linspace(0, downsampled_matrix.shape[1], total_time)
-    ax2.plot(time, force_curve[:total_time], color="blue", linewidth=1, alpha=0.7)
+    ax2.plot(time, force_curve[:total_time], color="blue", linewidth=0.5, alpha=0.7)
     ax2.set_ylabel("Force (N)", color="blue")
     ax2.tick_params(axis="y", colors="blue")
-    # ax2.set_xlim(0, total_time / fs)  # Align force curve with heatmap
 
     plt.tight_layout()
 
@@ -176,7 +175,7 @@ def force_curve(data, data_name: str):
     time = np.arange(len(force)) / data["fs"].item()
 
     plt.plot(time, force, color="blue")
-    plt.title(f"Experimental Force Curve for {data_name}")
+    plt.title(f"{data_name}")
     plt.xlabel("Time (s)")
     plt.ylabel("Force (N)")
 
@@ -196,20 +195,26 @@ def _main():
 
     data_to_plot = trapezoid
 
-    ## ---------------- PLOT FORCE CURVES FOR BOTH DATA FILES ---------------- ##
-    # plt.figure(figsize=(18, 10))
-    # plt.subplot(2, 1, 1)
-    # force_curve(trapezoid, "Trapezoid")
+    ## ---------------- PLOT FORCE CURVES FOR ALL DATA FILES ---------------- ##
+    plt.figure(figsize=(18, 10))
+    plt.subplot(3, 1, 1)
+    force_curve(trapezoid, "Trapezoid 20% MVC")
 
-    # plt.subplot(2, 1, 2)
-    # force_curve(trapezoid_sinusoid2hz, "Trapezoid + 2hz Sinusoid")
+    plt.subplot(3, 1, 2)
+    force_curve(trapezoid_sinusoid2hz, "Trapezoid 5% MVC & 2hz Sinusoid - 5-15% MVC")
 
-    # os.makedirs("figures", exist_ok=True)
-    # plt.savefig(
-    #     f"figures/force_curves.png",
-    # )
+    plt.subplot(3, 1, 3)
+    force_curve(trapezoid_repetitive, "Trapezoid 5% MVC")
 
-    # print("Figure generated in the 'figures/' folder.")
+    plt.subplots_adjust(hspace=0.5, top=0.9)
+    plt.suptitle("Experimental Force Curves", fontweight="bold")
+
+    os.makedirs("figures", exist_ok=True)
+    plt.savefig(
+        f"figures/force_curves.png",
+    )
+
+    print("Figure generated in the 'figures/' folder.")
 
     ## ---------------- PLOT HEATMAP FOR BOTH DATAS IN SEPERATE PLOTS ---------------- ##
     plt.figure(figsize=(18, 8))
