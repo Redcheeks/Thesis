@@ -11,18 +11,25 @@ def _main():
 
     trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
 
-    data_to_plot = trapezoid
+    data_to_plot = trapezoid_sinusoid2hz
     plt.ion()  # Turn on interactive mode
 
-    for ind in np.arange(
-        data_to_plot["discharge_times"][0].shape[0]
-    ):  # for each neuron
+    # Extract data
+    discharge_times = data_to_plot["discharge_times"]
+    fs = data_to_plot["fs"].item()  # Sampling frequency
+
+    for ind, neuron_data in enumerate(discharge_times[0]):  # for each neuron
         plt.close()
         fig, ax = plt.subplots()
-        # plot , frequency.
+        spikes = np.sort(neuron_data.flatten())
+
+        isi = np.diff(spikes)
+        isi_freq = 1 / (isi / fs)
+        isi_freq = np.insert(isi_freq, 0, 0)  # first spike frequency is 0
+
         ax.plot(
-            data_to_plot["discharge_times"][0][ind][0][:-1] / 2e3,
-            1000 / (np.diff(data_to_plot["discharge_times"][0][ind][0][:]) / 2),
+            spikes / fs,
+            isi_freq,
             "o",
         )
         ax.set_ylabel("Instantaneous Frequency [Hz]")
