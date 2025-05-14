@@ -21,6 +21,9 @@ def heatmap(data_to_plot):
     inactive_threshold = 5  # Active
     threshold_low = 40  # Orange scaling threshold
     threshold_high = 150  # doublet red threshold
+    force_to_neuron_offset = (
+        -0.2
+    )  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
 
     ## ------------------------------------------------------------ ##
 
@@ -160,8 +163,18 @@ def heatmap(data_to_plot):
 
     ## ------------ Overlay force curve on secondary y-axis
     ax2 = ax.twinx()
-    time = np.linspace(0, downsampled_matrix.shape[1], total_time)
-    ax2.plot(time, force_curve[:total_time], color="blue", linewidth=0.5, alpha=0.7)
+    time = np.linspace(
+        force_to_neuron_offset * 0.01 * fs,
+        downsampled_matrix.shape[1] + force_to_neuron_offset * 0.01 * fs,
+        total_time,
+    )
+    ax2.plot(
+        time,
+        force_curve[:total_time],
+        color="blue",
+        linewidth=0.5,
+        alpha=0.7,
+    )
     ax2.set_ylabel("Force (N)", color="blue")
     ax2.tick_params(axis="y", colors="blue")
 
