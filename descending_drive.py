@@ -165,36 +165,60 @@ def cortical_input(
 
 def _main():
     # Example Usage
-    T_dur = 1000  # Total time in ms
+    T_dur = 60e3  # Total time in ms
     dt = 0.1  # Time step in ms
     n_mn = 300  # Number of motor neurons
     n_clust = 3  # Number of clusters
     max_I = 9  # Max input current (nA)
-    CCoV = 5  # Common noise CoV (%)
+    CCoV = 10  # Common noise CoV (%)
     ICoV = 5  # Independent noise CoV (%)
     signal_shape = "step-sinusoid"
-    freq = 2
+    freq = 0.2
 
-    CI = cortical_input(n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, signal_shape, freq)
+    CI_sinus = cortical_input(
+        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, signal_shape, freq
+    )
 
-    # Plot the first motor neuron's cortical input
-    plt.figure(1, figsize=(8, 6))
-    time = np.linspace(0, T_dur, CI.shape[0])
-    # for i in range(5):  # Plot first 5 neurons
-    # plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
-    plt.plot(time, CI[:, 50], label=f"Neuron {50}")
-    # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
-    # plt.plot(time, CI[:, 250], label=f"Neuron {250}")
-    plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
-    plt.xlabel("Time (ms)")
+    CI_trap = cortical_input(
+        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", freq
+    )
+
+    plt.figure(figsize=(18, 10))
+    plt.tight_layout()
+    time = np.linspace(0, T_dur, CI_trap.shape[0])
+
+    plt.subplot(2, 1, 1)
+    plt.plot(time * 1e-3, CI_trap[:, 50], label=f"Neuron {50}")
+    plt.axhline(max_I, color="r", ls="--", alpha=0.4)
+    plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
-    plt.title(f"Cortical Input for Neuron {50}")
+    plt.title(f"Trapezoid input")
+
+    plt.subplot(2, 1, 2)
+    plt.plot(time * 1e-3, CI_sinus[:, 50], label=f"Neuron {50}")
+    plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Current (nA)")
+    plt.title(f"Trapezoid + 2hz Sinusoid input")
+
+    # # Plot the first motor neuron's cortical input
+    # plt.figure(1, figsize=(8, 6))
+    # time = np.linspace(0, T_dur, CI.shape[0])
+    # # for i in range(5):  # Plot first 5 neurons
+    # # plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
+    # plt.plot(time, CI[:, 50], label=f"Neuron {50}")
+    # # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
+    # # plt.plot(time, CI[:, 250], label=f"Neuron {250}")
+    # plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
+    # plt.xlabel("Time (ms)")
+    # plt.ylabel("Current (nA)")
+    # plt.title(f"Cortical Input for Neuron {50}")
 
     os.makedirs("figures", exist_ok=True)
     if CCoV > 0 or ICoV > 0:
-        plt.savefig(f"figures/CI_{signal_shape}_withNoise.png")
+        plt.savefig(f"figures/CI_withNoise.png")
     else:
-        plt.savefig(f"figures/CI_{signal_shape}.png")
+        plt.savefig(f"figures/CI.png")
 
     # plt.figure(2, figsize=(12, 6))
     # sns.heatmap(
@@ -203,18 +227,21 @@ def _main():
     # plt.xlabel("Time (samples)")
     # plt.ylabel("Neurons")
     # plt.title("Cortical Input Heatmap")
-    plt.show()
 
-    mean_activity = CI.mean(axis=0)  # Mean cortical input per neuron
-    std_activity = CI.std(axis=0)  # Standard deviation per neuron
+    # mean_activity = CI.mean(axis=0)  # Mean cortical input per neuron
+    # std_activity = CI.std(axis=0)  # Standard deviation per neuron
 
-    # print(std_activity / mean_activity)
+    # CoV_CI = std_activity / mean_activity
+
+    # print(f"max CoV for CI = {np.max(CoV_CI)}")
 
     # print("Mean cortical input per neuron:")
     # print(mean_activity)
 
     # print("\nStandard deviation per neuron:")
     # print(std_activity)
+    #
+    plt.show()
 
 
 if __name__ == "__main__":
