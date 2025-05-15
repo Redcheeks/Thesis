@@ -204,11 +204,8 @@ def _main():
     trapezoid_repetitive = scipy.io.loadmat(
         "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_SORTED.mat"
     )
-    ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
 
-    data_to_plot = trapezoid
-
-    ## ---------------- PLOT FORCE CURVES FOR ALL DATA FILES ---------------- ##
+    ## ---------------- PLOT FORCE CURVES FOR ALL 3 DATA FILES ---------------- ##
     plt.figure(figsize=(18, 10))
     plt.subplot(3, 1, 1)
     force_curve(trapezoid, "Trapezoid 20% MVC")
@@ -229,7 +226,7 @@ def _main():
 
     print("Figure generated in the 'figures/' folder.")
 
-    ## ---------------- PLOT HEATMAP FOR BOTH DATAS IN SEPERATE PLOTS ---------------- ##
+    ## ---------------- PLOT HEATMAP FOR ALL 3 DATA FILES IN SEPERATE PLOTS ---------------- ##
     plt.figure(figsize=(18, 8))
     plt.subplot()
     heatmap(trapezoid)
@@ -261,10 +258,9 @@ def _main():
     plt.savefig(
         f"figures/experimental_heatmap_TrapSinus.png",
     )
-    # print("Figures generated in the 'figures/' folder.")
 
     ## ----------------  ----------------  ----------------  ---------------- ##
-
+    print("Figures generated in the 'figures/' folder.")
     plt.show()
 
 
