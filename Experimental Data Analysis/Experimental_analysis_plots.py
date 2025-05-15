@@ -195,14 +195,14 @@ def force_curve(data, data_name: str):
 
 def _main():
 
-    # Import data
+    ## ---------------- Import data ---------------- ##
     trapezoid_sinusoid2hz = scipy.io.loadmat(
         "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
     )
     trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
 
     trapezoid_repetitive = scipy.io.loadmat(
-        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets.mat"
+        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_SORTED.mat"
     )
     ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
 
