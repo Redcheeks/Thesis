@@ -5,6 +5,9 @@
         }
     ],
     "settings": {
-        "git.ignoreLimitWarning": true
+        "git.ignoreLimitWarning": true,
+        "debug.console.closeOnEnd": true,
+        "terminal.integrated.env.osx": {},
+        "python.createEnvironment.contentButton": "show"
     }
 }
