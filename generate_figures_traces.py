@@ -18,7 +18,7 @@ neuron_pool_size = 300  # Total number of Neurons in the pool
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 3  # Number of clusters
-max_I = 9  # Max input current (nA)
+max_I = 10  # Max input current (nA)
 CCoV = 5  # Cluster-common noise CoV (%)
 ICoV = 5  # Independent noise CoV (%)
 signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
@@ -252,8 +252,8 @@ if __name__ == "__main__":
 
     # Run models 1,2 and 3 and plot voltage trace, optional: inhibition, excitation
     for model_class, name in zip(
-        [LIF_Model1, LIF_Model2v3, LIF_Model3v2],
-        ["LIF_Model1", "LIF_Model2v3", "LIF_Model3v2"],
+        [LIF_Model1, LIF_Model2v3, LIF_Model3, LIF_Model3v2],
+        ["LIF_Model1", "LIF_Model2v3", "LIF_Model3", "LIF_Model3v2"],
     ):
         results = []
         for neuron in neurons:
