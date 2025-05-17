@@ -92,7 +92,8 @@ class LIF_Model3v2(TimestepSimulation):
                     decay_steps = tr
                     last_spike_counter = 0.0
 
-                    doublet_block = 1.0
+                    doublet_block += 0.5 * (1.0 - doublet_block)
+                    # Alternatively.. doublet_block = np.min([doublet_block + 0.7, 1])
                     V_reset_it = neuron.V_reset_mV - 10
                     # Doublet block does not impact reset voltage.
                     excitability = -1
@@ -107,7 +108,7 @@ class LIF_Model3v2(TimestepSimulation):
                     decay_steps = tr
 
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
-                    doublet_block = 1.0
+                    doublet_block += 0.5 * (1.0 - doublet_block)
 
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
