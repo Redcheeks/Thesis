@@ -3,8 +3,8 @@ from neuron import Neuron
 from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
-##MODEL WITH VARIABLE RESET VOLTAGE AND Inhibition decay factor...##
-# inhibition affects the variable reset voltage calculated in neuron.py class.
+##MODEL WITH VARIABLE RESET VOLTAGE + growing Inhibition decay factor + rheobase threshold for doublet##
+# inhibition affects the variable reset voltage calculated in neuron.py class. Also rheobase requirement for doublets
 
 
 class LIF_Model3(TimestepSimulation):
@@ -79,7 +79,7 @@ class LIF_Model3(TimestepSimulation):
 
             elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 ## ---- DOUBLET ---- ##
-                if last_spike_counter < 10 / timestep:
+                if last_spike_counter < 10 / timestep and Iinj[it] >= neuron.I_rheobase:
                     rec_spikes.append(it)  # record spike event
                     peak_voltage = 18  # 18mV for doublet
                     v[it] = peak_voltage
@@ -89,7 +89,7 @@ class LIF_Model3(TimestepSimulation):
                     decay_steps = tr
                     last_spike_counter = 0.0
 
-                    inhib_decay_factor = 1.0
+                    inhib_decay_factor += 0.5 * (1.0 - inhib_decay_factor)
                     # After doublet reset voltage is even lower, 10 is an arbitrary value to simulate the intensified AHP!!
                     V_reset_it = neuron.V_reset_mV - 10
                     excitability = -1
@@ -109,9 +109,8 @@ class LIF_Model3(TimestepSimulation):
                     V_reset_it = neuron.calculate_v_reset_MODEL3(
                         Iinj[it], inhib_decay_factor
                     )
-                    inhib_decay_factor = (
-                        1.0  # After every spike, inhibition is back to full.
-                    )
+                    inhib_decay_factor += 0.5 * (1.0 - inhib_decay_factor)
+
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
                     else:
