@@ -1,48 +1,44 @@
 from matplotlib.colors import LinearSegmentedColormap
 import scipy.io
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import List, Tuple
 import seaborn as sns
-import os
+from simulation.models.LIF_model1 import LIF_Model1
+from simulation.models.LIF_model2_v3 import LIF_Model2v3
 from simulation.models.LIF_model3 import LIF_Model3
+from simulation.models.LIF_model3_v2 import LIF_Model3v2
 from descending_drive import cortical_input
 from neuron import NeuronFactory
 
-""" 
+"""
+Model Output Plotting code
+Instructions to use: 
+In MAIN - Make sure correct model is uncommented
 
-Script to produce Heatmap-plots for Experimental data and Model 3 
-
-4 subplots
-top: Heatmaps to show active periods and doublets for experimental (left) and model3 (right) 
-bottom: Force curve for experimental (left) and synaptic input current/cortical input for model3 (right) 
+For details on how plots are made, see the relevant method
 
 """
-
-## ------------- Simulation Parameters ------------- ##
-T = 35000  # Simulation Time [ms]
+## ------------- General Simulation Parameters ------------- ##
+T = 10000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
-neuron_pool_size = 30  # Total number of Neurons in the pool
-
-## ------ Cortical input Simulation Parameters ------ ##
+neuron_pool_size = 300  # Total number of Neurons in the pool
+neurons_to_plot = range(10, 40)  # Maximum amount of active neurons to show.
+## ------------- Synaptic Input Simulation Parameters ------------- ##
 
 number_of_clusters = 3  # Number of clusters
 max_I = 9  # Max input current (nA)
-CCoV = 5  # Cluster-common noise CoV (%)
-ICoV = 5  # Independent noise CoV (%)
-signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+CCoV = 0  # Cluster-common noise CoV (%)
+ICoV = 0  # Independent noise CoV (%)
+signal_type = "step_sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
 freq = 2  # Frequency for sinusoid
 
-## ----- Plotting setup ------ ##
-# Load experimental data
-trapezoid_sinusoid2hz = scipy.io.loadmat(
-    "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
-)
-trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
-## -- CHOOSE WHICH DATASET TO PLOT: --
-data = trapezoid_sinusoid2hz
+## ------------- Plotting setup ------------- ##
 
-threshold_low = 40  # yellow threshold
-threshold_high = 150  # doublet red threshold
+inactive_threshold = 5
+threshold_high = 100
+threshold_low = 30
 
 # Update colormap for better contrast: pale yellow to warmer orange and red
 cmap = LinearSegmentedColormap.from_list(
@@ -51,158 +47,60 @@ cmap = LinearSegmentedColormap.from_list(
 # Improve color contrast for inactive periods
 cmap.set_bad(color="#d9d9d9")  # light gray for inactivity
 plt.style.use("default")  # light background
+## ------------------------------------------------------------ ##
 
 
-def plot_experimental_heatmap():
-    # create heatmap from experimental data
-    discharge_times = data["discharge_times"]
-    fs = data["fs"].item()  # Sampling frequency
+def heatmap(data_to_plot):
 
-    # Determine the total time of the experiment in samples
-    all_spike_times = np.concatenate(
-        [neuron.flatten() for neuron in discharge_times[0]]
-    )
-    total_time = int(np.ceil(np.max(all_spike_times))) + 1
+    ## ------------------------------------------------------------ ##
 
-    # Create a time-aligned frequency matrix
-    freq_matrix = np.full((len(discharge_times[0]), total_time), np.nan)
-    for i, neuron_data in enumerate(discharge_times[0]):
-        spikes = np.sort(neuron_data.flatten())
-        isi = np.diff(spikes)
-        isi_freq = 1 / (isi / fs)
+    # Extract variables
+    discharge_times = data_to_plot  # spike times
+    fs = 1 / (DT)  # Sampling frequency in 1/seconds!!
 
-        for j in range(len(isi)):
-            t_start = int(spikes[j])
-            t_end = int(spikes[j + 1]) if j + 1 < len(spikes) else total_time
-            if t_end > t_start:
-                freq_matrix[i, t_start:t_end] = isi_freq[j]
-
-    window_size = int(fs * 0.05)  # 50 ms window
-    num_windows = freq_matrix.shape[1] // window_size
-
-    # Aggregate using max pooling (highlight doublets)
-    with np.errstate(all="ignore"):
-        downsampled_matrix = np.nanmax(
-            freq_matrix[:, : num_windows * window_size].reshape(
-                len(discharge_times[0]), num_windows, window_size
-            ),
-            axis=2,
-        )
-
-    padded_freq_matrix = downsampled_matrix
-
-    ax = sns.heatmap(
-        padded_freq_matrix,
-        cmap=cmap,
-        vmin=threshold_low,
-        vmax=threshold_high,
-        # xticklabels=1000,
-        # yticklabels=[f" Neuron {i}" for i in range(len(padded_freq_matrix))],
-        cbar=True,
-        mask=np.isnan(padded_freq_matrix),
-    )
-
-    # Add horizontal lines between neurons
-    for y in range(1, padded_freq_matrix.shape[0]):
-        ax.axhline(y=y, color="lightgray", linewidth=0.5)
-
-    # Add colorbar label
-    cbar = ax.collections[0].colorbar
-    cbar.set_label("Instantaneous Frequency (Hz)", color="black")
-
-    # Annotate doublets
-    for y in range(downsampled_matrix.shape[0]):
-        for x in range(downsampled_matrix.shape[1]):
-            val = downsampled_matrix[y, x]
-            if not np.isnan(val) and val > 150:
-                ax.text(
-                    x + 0.5,
-                    y + 0.5,
-                    "D",
-                    ha="center",
-                    va="center",
-                    color="black",
-                    fontsize=6,
-                )
-
-    # Adjust x-axis tick labels to use integer seconds
-    xtick_locs = np.arange(0, padded_freq_matrix.shape[1], fs // 5)
-    xtick_labels = [f"{int((x * window_size) / fs)}" for x in xtick_locs]
-    ax.set_xticks(xtick_locs)
-    ax.set_xticklabels(xtick_labels)
-    plt.xlabel("Time (s)")
-    plt.title("Experimental - Active Periods and Doublets")
-    plt.ylabel("Neuron Index")
-
-
-def plot_model3_heatmap(CI):
-    # Generate Model 3 heatmap
-
-    # Create neurons and run Model 3
-
-    all_neurons = NeuronFactory.create_neuron_pool(
-        distribution=True, number_of_neurons=neuron_pool_size
-    )
-    neurons = [
-        all_neurons[i] for i in range(len(all_neurons))
-    ]  # Using all 30 neurons for heatmap. For larger group dont want all of them.
-
-    model = LIF_Model3()
+    total_time = int(T * fs)  # Total time
 
     # Create a time-aligned frequency matrix
-    freq_matrix = np.full((len(neurons), int(T / DT)), np.nan)
-    fs = data["fs"].item()  # Use same sampling frequency..
+    freq_matrix = np.full((len(discharge_times), total_time), np.nan)
 
-    for i, neuron in enumerate(neurons):
-        _, spikes, _, _ = model.simulate_neuron(T, DT, neuron, CI[:, i])
+    # Calculate ISI frequencies and fill the matrix
+    for i, neuron_data in enumerate(discharge_times):
+        spikes = neuron_data[0]
         if len(spikes) < 2:
             continue  # Not enough spikes to calculate frequency
-        else:
-            # Compute instantaneous frequency using interspike intervals
-            isi = np.diff(spikes * 1e-3)  # Convert to seconds
-            freq = np.concatenate(([0], 1 / isi))
-            for j in range(len(isi)):
-                t_start = int(spikes[j])
-                t_end = int(spikes[j + 1]) if j + 1 < len(spikes) else int(T / DT)
-                if t_end > t_start:
-                    freq_matrix[i, t_start:t_end] = freq[j]
+        isi = np.diff(spikes * DT)  # [ms]
+        isi_freq = 1 / (isi) * 1e3
 
-    window_size = int(fs * 0.05)  # 50 ms window
-    num_windows = int(
-        (T / 1000) * fs / window_size
-    )  # Ensure it matches the experimental scale
+        # Fill the frequency matrix for active periods, and breaks
+        for j, freq in enumerate(isi_freq):
+            t_start = int(spikes[j])
+            t_end = int(spikes[j + 1]) if j + 1 < len(spikes) else total_time
+            if freq < inactive_threshold:
+                freq_matrix[i, t_start:t_end] = np.nan
 
-    # Aggregate using max pooling (highlight doublets)
-    with np.errstate(all="ignore"):
-        downsampled_matrix = np.nanmax(
-            freq_matrix[:, : num_windows * window_size].reshape(
-                len(neurons), num_windows, window_size
-            ),
-            axis=2,
-        )
+            else:
+                freq_matrix[i, t_start:t_end] = freq
+
+        # Mark the period after the last spike as inactive
+        freq_matrix[i, int(spikes[-1]) :] = np.nan
 
     ax = sns.heatmap(
-        downsampled_matrix,
+        freq_matrix,
         cmap=cmap,
         vmin=threshold_low,
         vmax=threshold_high,
-        # xticklabels=1000,
-        # linewidths=0.3,
-        # linecolor="white",
         cbar=True,
-        mask=np.isnan(downsampled_matrix),
+        mask=np.isnan(freq_matrix),
     )
 
-    # plt.imshow(spike_matrix, aspect="auto", cmap="hot", interpolation="none")
-
     # Add horizontal lines between neurons
-    for y in range(1, downsampled_matrix.shape[0]):
+    for y in range(1, freq_matrix.shape[0]):
         ax.axhline(y=y, color="lightgray", linewidth=0.5)
 
     # Annotate doublets
-    for y in range(downsampled_matrix.shape[0]):
-        for x in range(downsampled_matrix.shape[1]):
-            val = downsampled_matrix[y, x]
+    for y in range(freq_matrix.shape[0]):
+        for x in range(freq_matrix.shape[1]):
+            val = freq_matrix[y, x]
             if not np.isnan(val) and val > threshold_high:
                 ax.text(
                     x + 0.5,
@@ -214,40 +112,46 @@ def plot_model3_heatmap(CI):
                     fontsize=6,
                 )
 
-    # Adjust x-axis tick labels to use integer seconds
-    xtick_locs = np.arange(0, downsampled_matrix.shape[1], int(fs / 10))
-    xtick_labels = [f"{int((x * window_size) / fs)}" for x in xtick_locs]
+    # X-axis tick labels (adjusted to time in seconds)
+    xtick_locs = np.arange(0, total_time, total_time / 20)
+    xtick_labels = [f"{int((x) / fs)*1e-3}" for x in xtick_locs]
+
     ax.set_xticks(xtick_locs)
     ax.set_xticklabels(xtick_labels)
-    plt.title("Model 3 - Active Periods and Doublets")
     plt.xlabel("Time (s)")
+
+    plt.title(
+        f"Neurons with Instantaneous Frequency\n Pale Yellow < {threshold_low} Hz, Red > {threshold_high} Hz (Doublets)",
+        pad=30,
+    )
     plt.ylabel("Neuron Index")
+    ax.set_yticklabels(neurons_to_plot)
+    from matplotlib.patches import Patch
+
+    legend_elements = [
+        Patch(
+            facecolor="#d9d9d9",
+            edgecolor="k",
+            label=f"Inactive (<{inactive_threshold}Hz)",
+        ),
+        Patch(facecolor="#fffde7", edgecolor="k", label="Normal spiking"),
+        Patch(facecolor="#cc0000", edgecolor="k", label="Doublet (D)"),
+    ]
+    ax.invert_yaxis()
+
+    # Move legend closer to the title
+    plt.legend(
+        handles=legend_elements,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.08),  # move legend above plot, below title
+        ncol=3,
+        frameon=False,
+    )
 
 
-def plot_experimental_force():
-    # plot experimental force curve
+def _main():
 
-    force = data["force"].flatten()
-    time = np.arange(len(force)) / data["fs"].item()
-
-    plt.plot(time, force, color="blue")
-    plt.title("Experimental Force Curve")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Force (N)")
-
-
-def plot_model3_synaptic_input(CI):
-    # Generate synaptic input (cortical input) for Model 3
-    time = np.linspace(0, T / 1000, int(T / DT))  # time in seconds
-
-    plt.plot(time, CI[:, 0], color="orange")
-    plt.title("Model 3 - Synaptic Input")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Synaptic Input (nA)")
-
-
-def generate_report_figure():
-
+    ## ---------------- Create Synaptic Drive ---------------- ##
     CI = cortical_input(
         neuron_pool_size,
         number_of_clusters,
@@ -259,26 +163,44 @@ def generate_report_figure():
         signal_type,
         freq,
     )
+    ## ---------------- Create Neurons ---------------- ##
 
-    plt.figure(figsize=(12, 8))
+    all_neurons = NeuronFactory.create_neuron_pool(
+        distribution=True, number_of_neurons=neuron_pool_size
+    )
+    neurons = [all_neurons[i] for i in neurons_to_plot]
 
-    plt.subplot(2, 2, 1)
-    plot_experimental_heatmap()
+    ## ---------------- PLOT HEATMAP FOR ALL MODELS IN SEPERATE PLOTS ---------------- ##
+    # Run for all models
+    for model_class, name in zip(
+        [LIF_Model1, LIF_Model2v3, LIF_Model3, LIF_Model3v2],
+        ["LIF_Model1", "LIF_Model2v3", "LIF_Model3", "LIF_Model3v2"],
+    ):
+        results = []
+        for i, neuron in enumerate(neurons):
+            Iinj = CI[: int(T / DT), neuron.number]
+            _, spikes, *rest = model_class.simulate_neuron(
+                T, DT, neuron=neuron, Iinj=Iinj
+            )
+            results.append([spikes / DT])  # ms to time step
 
-    plt.subplot(2, 2, 2)
-    plot_model3_heatmap(CI)
-
-    plt.subplot(2, 2, 3)
-    plot_experimental_force()
-
-    plt.subplot(2, 2, 4)
-    plot_model3_synaptic_input(CI)
-
-    plt.tight_layout()
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig("figures/experimental_vs_model_heatmaps.png", dpi=300)
+        plt.figure(figsize=(18, 8))
+        plt.subplot()
+        heatmap(results)
+        plt.subplots_adjust(top=0.83, right=1)
+        plt.suptitle(
+            f"{name} Output for {max_I} nA (Trapezoid + 2 Hz Sinusoid) input",
+            fontweight="bold",
+        )
+        os.makedirs("figures", exist_ok=True)
+        plt.savefig(
+            f"figures/heatmap_{name}.png",
+        )
+        # print(f"{name} done!")
+    ## ----------------  ----------------  ----------------  ---------------- ##
+    print("Figures generated in the 'figures/' folder.")
     plt.show()
 
 
 if __name__ == "__main__":
-    generate_report_figure()
+    _main()
