@@ -13,7 +13,7 @@
         "**/__pycache__": true,
         "models_legacy": true,
         "OLD---run_MAIN.py": true,
-        "plot_param.py": true,
+        "plot_param.py": false,
         "comparing_parameter_calc.py": true,
         "scripts/": true,
         ".pylintrc": true
