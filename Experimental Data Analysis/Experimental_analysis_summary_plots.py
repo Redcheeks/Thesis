@@ -14,16 +14,14 @@ For details on how plots are made, see the relevant method
 
 """
 
+## ------------- Heatmap Plotting setup ------------- ##
+inactive_threshold = 5  # Active
+threshold_low = 40  # Orange scaling threshold
+threshold_high = 150  # doublet red threshold
+force_to_neuron_offset = 0.2  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
+
 
 def heatmap(data_to_plot):
-
-    # Plotting parameters
-    inactive_threshold = 5  # Active
-    threshold_low = 40  # Orange scaling threshold
-    threshold_high = 150  # doublet red threshold
-    force_to_neuron_offset = (
-        -0.2
-    )  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
 
     ## ------------------------------------------------------------ ##
 
@@ -34,12 +32,6 @@ def heatmap(data_to_plot):
     # Determine the total time of the experiment using the force curve
     force_curve = data_to_plot["force"].flatten()
     total_time = len(force_curve)  # Total number of samples in the force curve
-
-    # # Determine the total time of the experiment in samples
-    # all_spike_times = np.concatenate(
-    #     [neuron.flatten() for neuron in discharge_times[0]]
-    # )
-    # total_time = int(np.ceil(np.max(all_spike_times))) + 1
 
     # Create a time-aligned frequency matrix
     freq_matrix = np.full((len(discharge_times[0]), total_time), np.nan)
@@ -161,7 +153,7 @@ def heatmap(data_to_plot):
     )
     ax.invert_yaxis()
 
-    ## ------------ Overlay force curve on secondary y-axis
+    ## OPTIONAL: ------------ Overlay force curve on secondary y-axis
     ax2 = ax.twinx()
     time = np.linspace(
         force_to_neuron_offset * 0.01 * fs,
