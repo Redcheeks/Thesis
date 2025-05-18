@@ -5,28 +5,27 @@ from typing import List, Tuple, Type
 from neuron import Neuron, NeuronFactory
 from descending_drive import cortical_input
 from simulation.models.LIF_model1 import LIF_Model1
-
 from simulation.models.LIF_model2_v3 import LIF_Model2v3
 from simulation.models.LIF_model3 import LIF_Model3
 from simulation.models.LIF_model3_v2 import LIF_Model3v2
 
 ## ------------- Simulation Parameters ------------- ##
-T = 1000  # Simulation Time [ms]
+T = 10000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 3  # Number of clusters
-max_I = 10  # Max input current (nA)
-CCoV = 5  # Cluster-common noise CoV (%)
-ICoV = 5  # Independent noise CoV (%)
+max_I = 9  # Max input current (nA)
+CCoV = 0  # Cluster-common noise CoV (%)
+ICoV = 0  # Independent noise CoV (%)
 signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
 freq = 2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [1, 10, 50, 150]
+NEURON_INDEXES: List[int] = [10, 15, 20, 30]
 
 
 def run_model(
