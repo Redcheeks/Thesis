@@ -4,7 +4,8 @@ from typing import Tuple
 from simulation.simulate import TimestepSimulation
 
 ##MODEL WITH VARIABLE RESET VOLTAGE + growing Inhibition decay factor + rheobase threshold for doublet##
-# inhibition affects the variable reset voltage calculated in neuron.py class. Also rheobase requirement for doublets
+# inhibition affects the variable reset voltage calculated in neuron.py class.
+# ALSO!! rheobase requirement for doublets
 
 
 class LIF_Model3(TimestepSimulation):
@@ -51,6 +52,9 @@ class LIF_Model3(TimestepSimulation):
         excitability = 0  # Track if neuron has increased excitability, 1 = increased, 0 = normal, -1 = post doublet
         inhib_decay_factor = 0.0
 
+        # Decay is based on Purvis & Butera I_SK current: K2=0.04; %decay rate constant representing calcium uptake and diffusion (ms)
+        tau = 100.0  # Adjust this value for your desired decay time
+
         for it in range(simulation_steps - 1):
 
             if (
@@ -83,7 +87,6 @@ class LIF_Model3(TimestepSimulation):
                     rec_spikes.append(it)  # record spike event
                     peak_voltage = 18  # 18mV for doublet
                     v[it] = peak_voltage
-
                     # set new refractory time : double normal time.
                     tr = neuron.tref * 2 / timestep
                     decay_steps = tr
@@ -92,6 +95,7 @@ class LIF_Model3(TimestepSimulation):
                     inhib_decay_factor += 0.5 * (1.0 - inhib_decay_factor)
                     # After doublet reset voltage is even lower, 10 is an arbitrary value to simulate the intensified AHP!!
                     V_reset_it = neuron.V_reset_mV - 10
+
                     excitability = -1
 
                 ## ---- NORMAL SPIKE ---- ##
@@ -120,7 +124,7 @@ class LIF_Model3(TimestepSimulation):
 
             ## See comments in LIF_Model2v3 for more info on below code.
             if (
-                last_spike_counter > 2 / timestep and excitability == 1
+                excitability == 1 and last_spike_counter > 4 / timestep
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
@@ -137,7 +141,7 @@ class LIF_Model3(TimestepSimulation):
             v[it + 1] = v[it] + dv
             last_spike_counter += 1
 
-            inhib_decay_factor *= np.exp(-timestep / 500.0)
+            inhib_decay_factor *= np.exp(-timestep / tau)
 
             inhib_trace[it] = inhib_decay_factor
             reset_trace[it] = V_reset_it
