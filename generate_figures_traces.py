@@ -10,14 +10,14 @@ from simulation.models.LIF_model3 import LIF_Model3
 from simulation.models.LIF_model3_v2 import LIF_Model3v2
 
 ## ------------- Simulation Parameters ------------- ##
-T = 10000  # Simulation Time [ms]
+T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 3  # Number of clusters
-max_I = 9  # Max input current (nA)
+max_I = 15  # Max input current (nA)
 CCoV = 0  # Cluster-common noise CoV (%)
 ICoV = 0  # Independent noise CoV (%)
 signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
@@ -25,7 +25,7 @@ freq = 2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [10, 15, 20, 30]
+NEURON_INDEXES: List[int] = [10, 20, 30, 45]
 
 
 def run_model(
