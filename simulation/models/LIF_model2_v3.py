@@ -109,10 +109,13 @@ class LIF_Model2v3(TimestepSimulation):
 
                     last_spike_counter = 0.0
 
-            ## SOURCE: From Kudina 1989 - increased exciytability for 20msec post spike for neurons that are able to produce doublets.
+            ## SOURCES:
+            # Kernell 1964 - ADP hump lasts about 2.5-6ms, choose 4ms. Future work: let this be neuron dependant.
+            # Ionic model Purvis and Butera shows the ADP bump lasting closer to 2ms
+            # From Kudina 1989 - increased exciytability for 20msec post spike for neurons that are able to produce doublets???
             # From Halonen 1977 - the ISI post doublet is approx 1.5 times the ISI of previous spikes. Assumed to be due to prolonged Afterhyperpolarization period. (Kudina 2013, Kudina 2010 and many more give similar numbers!)
             if (
-                last_spike_counter > 2 / timestep and excitability == 1
+                excitability == 1 and last_spike_counter > 4 / timestep
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
