@@ -17,8 +17,10 @@ For details on how plots are made, see the relevant method
 ## ------------- Heatmap Plotting setup ------------- ##
 inactive_threshold = 5  # Active
 threshold_low = 40  # Orange scaling threshold
-threshold_high = 150  # doublet red threshold
-force_to_neuron_offset = 0.2  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
+threshold_high = 100  # doublet red threshold
+force_to_neuron_offset = (
+    -0.2
+)  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
 
 
 def heatmap(data_to_plot):
@@ -194,7 +196,7 @@ def _main():
     trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
 
     trapezoid_repetitive = scipy.io.loadmat(
-        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_SORTED.mat"
+        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_sustained_weighted_sorted.mat"
     )
 
     ## ---------------- PLOT FORCE CURVES FOR ALL 3 DATA FILES ---------------- ##
