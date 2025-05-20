@@ -8,7 +8,7 @@ from descending_drive import cortical_input  # script for creating current input
 import seaborn as sns
 
 
-T = 1000  # Simulation Time [ms]
+T = 1000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 
 

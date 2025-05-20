@@ -31,7 +31,7 @@ class LIF_Model3(TimestepSimulation):
 
         """
 
-        simulation_steps = len(np.arange(0, sim_time, timestep))
+        simulation_steps = len(Iinj)
 
         # Initialize voltage
         v = np.zeros(simulation_steps)

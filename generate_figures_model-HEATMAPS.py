@@ -21,7 +21,7 @@ For details on how plots are made, see the relevant method
 
 """
 ## ------------- General Simulation Parameters ------------- ##
-T = 10000  # Simulation Time [ms]
+T = 10000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 neurons_to_plot = range(10, 40)  # Maximum amount of active neurons to show.

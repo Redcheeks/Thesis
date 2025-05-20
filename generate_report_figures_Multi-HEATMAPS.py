@@ -19,7 +19,7 @@ bottom: Force curve for experimental (left) and synaptic input current/cortical 
 """
 
 ## ------------- Simulation Parameters ------------- ##
-T = 35000  # Simulation Time [ms]
+T = 35000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 30  # Total number of Neurons in the pool
 

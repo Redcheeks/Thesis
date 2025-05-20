@@ -27,7 +27,7 @@ class LIF_Model1(TimestepSimulation):
         inhib_trace     : trace of inhibition/doublet blocking state over time [array]
         """
 
-        simulation_steps = len(np.arange(0, sim_time, timestep))
+        simulation_steps = len(Iinj)
 
         # Initialize voltage
         v = np.zeros(simulation_steps)

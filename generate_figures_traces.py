@@ -17,14 +17,14 @@ In MAIN - Make sure correct model is uncommented
 For details on how plots are made, see the relevant method
 
 """  ## ------------- Simulation Parameters ------------- ##
-T = 1000  # Simulation Time [ms]
+T = 1000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 3  # Number of clusters
-max_I = 15  # Max input current (nA)
+max_I = 9  # Max input current (nA)
 CCoV = 0  # Cluster-common noise CoV (%)
 ICoV = 0  # Independent noise CoV (%)
 signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
@@ -57,7 +57,7 @@ def plot_voltage_traces(
     CI: np.ndarray,
     model_name: str,
 ) -> None:
-    time = np.linspace(0, len(CI) * DT, len(CI))
+    time = np.arange(0, len(CI) * DT, 1)
     import math
 
     rows = int(np.ceil(np.sqrt(len(simulation_data))))
@@ -105,7 +105,7 @@ def plot_inhibition_traces(
     CI: np.ndarray,
     model_name: str,
 ) -> None:
-    time = np.linspace(0, len(CI) * DT, len(CI))
+    time = np.arange(0, len(CI) * DT, 1)
     # For Model 3, we want 3 columns (Voltage, Inhibition, Reset)
     ncols = 3 if (model_name == "LIF_Model3v2" or model_name == "LIF_Model3") else 2
     figsize = (
@@ -220,7 +220,7 @@ def plot_inhibition_traces(
 def plot_cortical_input(CI: np.ndarray):
 
     plt.figure(1, figsize=(8, 6))
-    time = np.linspace(0, T, CI.shape[0])
+    time = np.arange(0, len(CI) * DT, 1)
 
     plt.plot(time, CI[:, 50], label=f"Neuron {50}")
     # plt.plot(time, CI[:, 150], label=f"Neuron {150}")

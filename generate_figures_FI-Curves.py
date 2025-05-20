@@ -18,7 +18,7 @@ For details on how plots are made, see the relevant method
 
 """
 ## ------------- Simulation Parameters ------------- ##
-T = 100  # Simulation Time [ms]
+T = 100  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
@@ -40,9 +40,14 @@ def FI_curves(neuron, model):
         v, sp = model.simulate_neuron(T, DT, neuron, current)[:2]
         # only interested in 2nd return value
         if len(sp) > 1:
-            freq[i] = 1 / np.mean(np.diff(sp)) * 1e3
+            freq[i] = (
+                1 / np.max(np.diff(sp)) * 1e3
+            )  # alternatively look at mean: np.mean(np.diff(sp))
 
-    plt.plot(cur, freq)
+    plt.plot(
+        cur,
+        freq,
+    )
     plt.xlabel("Current [nA]")
     plt.ylabel("Frequency [Hz]")
     plt.title(f"Output frequencies for DC currents {min_I}-{max_I} [nA]")

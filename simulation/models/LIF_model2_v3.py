@@ -28,7 +28,7 @@ class LIF_Model2v3(TimestepSimulation):
         reset_trace     : reset voltage over time [array]
         """
 
-        simulation_steps = len(np.arange(0, sim_time, timestep))
+        simulation_steps = len(Iinj)
 
         # Initialize voltage
         v = np.zeros(simulation_steps)

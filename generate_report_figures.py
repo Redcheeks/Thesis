@@ -11,7 +11,7 @@ from simulation.models.LIF_model3 import LIF_Model3
 from simulation.models.LIF_model3_v2 import LIF_Model3v2
 
 ## ------------- Simulation Parameters ------------- ##
-T = 1000  # Simulation Time [ms]
+T = 1000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 

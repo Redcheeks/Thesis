@@ -8,7 +8,7 @@ import seaborn as sns  # you may need to run:     conda install seaborn -c conda
 
 ## -------- TEST Plotting Parameters ----------
 
-T_SIM = 30e3  # Total time in ms
+T_SIM = 30e3  # Total time in ms (Overall time might differ as CI can increase this if needed)
 DT_SIM = 0.1  # Time step in ms
 MN_POOL_SIZE = 300  # Number of motor neurons
 N_CLUST = 3  # Number of clusters
