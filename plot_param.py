@@ -30,11 +30,11 @@ def _main():
 
     ## PLOT distribution I_rheo vs D_soma
     ax2.plot(
-        [item.D_soma for item in neuron_pool],
+        [item.number for item in neuron_pool],
         [item.I_rheobase for item in neuron_pool],
         "b",
     )
-    ax2.set_xlabel("D_soma [μm]")
+    ax2.set_xlabel("index")
     ax2.set_ylabel("Rheobase [nA]")
     ax2.set_title("Rheobase from experimental distribution")
 
