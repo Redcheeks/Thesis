@@ -8,7 +8,10 @@ V_RESET: np.float64 = -75.0  # Hyperpolarization, membrane potential in mV
 V_INIT: np.float64 = -70.0  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
 RHEOBASE_EXCITABILITY_RANGE: np.float64 = (
-    10  # maximum diff of input to rheobase for reset change
+    3  # maximum diff of input to rheobase for reset change
+)
+EXCITABILITY_DECAY = (
+    0.16  # how quickly does excitability decrease as current is further from rheobase
 )
 
 TREF_FRAC_AHP: np.float64 = 0.05  # t_ref as a fraction of AHP.
@@ -160,7 +163,7 @@ class Neuron:
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
         #TODO : How far is the increased excitability distributed?
         """
-        delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
+        delta_I = abs(Iinj_it - self.I_rheobase)  # Absolute current difference
         max_rheobase_diff = RHEOBASE_EXCITABILITY_RANGE  # 5 nA
 
         if delta_I >= max_rheobase_diff:
@@ -169,11 +172,14 @@ class Neuron:
             )  # If difference exceeds 5 nA, set fixed reset voltage
 
         # Linear interpolation between V_th_mV and V_reset_mV
-        V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
-            self.V_th_mV - self.V_reset_mV
-        )
-        # print(f"Reset: {V_reset:.2f} mV")
-        return V_reset
+        # V_reset = self.V_reset_mV + (1 - delta_I / max_rheobase_diff) * (
+        #     self.V_th_mV - self.V_reset_mV
+        # )
+        V_reset = (self.V_th_mV + 1.5) - np.exp(
+            EXCITABILITY_DECAY * delta_I
+        )  # 1.5 was manually tuned to push only the closest across the threshold
+
+        return np.max([V_reset, self.V_reset_mV])  #
 
     #### -------- MODEL 3 method below!! -------
     def calculate_v_reset_MODEL3(
@@ -189,8 +195,11 @@ class Neuron:
         if delta_I >= max_rheobase_diff:
             V_reset = self.V_reset_mV
         else:
-            V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
-                self.V_th_mV - self.V_reset_mV
+            V_reset = np.max(
+                [
+                    (self.V_th_mV + 1.5) - np.exp(EXCITABILITY_DECAY * delta_I),
+                    self.V_reset_mV,
+                ]
             )
 
         V_reset -= inhib_level * 5  # up to 5 mV additional hyperpolarization
