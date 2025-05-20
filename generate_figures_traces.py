@@ -9,7 +9,14 @@ from simulation.models.LIF_model2_v3 import LIF_Model2v3
 from simulation.models.LIF_model3 import LIF_Model3
 from simulation.models.LIF_model3_v2 import LIF_Model3v2
 
-## ------------- Simulation Parameters ------------- ##
+"""
+Script for plotting neuron voltage trace, reset voltage (excitation), inhibition traces and Input Current CI
+Instructions to use: 
+In MAIN - Make sure correct model is uncommented
+
+For details on how plots are made, see the relevant method
+
+"""  ## ------------- Simulation Parameters ------------- ##
 T = 1000  # Simulation Time [ms]
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
