@@ -5,11 +5,22 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import seaborn as sns  # you may need to run:     conda install seaborn -c conda-forge and maybe update your environment
 
-# to do: implement descending drives. look at robins code
+
+## -------- TEST Plotting Parameters ----------
+
+T_SIM = 30e3  # Total time in ms
+DT_SIM = 0.1  # Time step in ms
+MN_POOL_SIZE = 300  # Number of motor neurons
+N_CLUST = 3  # Number of clusters
+INPUT_AMP = 9  # Max input current (nA)
+CCOV = 14  # Common noise CoV (%)
+ICOV = 5  # Independent noise CoV (%)
+
+# Note: Signal shape and frequency are to be set in the plot_CI()
 
 
 def cortical_input(
-    n_mn, n_clust, max_I, T_dur, dt, CCoV=20, ICoV=5, mean_shape="trapezoid", freq=2
+    n_mn, n_clust, max_I, T_dur, dt, CCoV=20, ICoV=5, mean_shape="trapezoid", freq=0.2
 ):
     """
     Generates a signal simulating the cortical input to the motorneurons.
@@ -39,13 +50,45 @@ def cortical_input(
 
     freq = freq * 1e-3  # hz to 1/ms
 
-    time = np.arange(0, T_dur, dt)
+    ##The ramp time is based on the experimental data in this thesis.
+    if mean_shape == "DC":
+        zero_time = 0
+        ramp_time = 0
+    else:
+        ramp_time = 5e3  # 5seconds long ramp
+        zero_time = 2e3  # 2 seconds zero time
 
-    if mean_shape == "trapezoid":
+    # If T_dur is to short, add time for ramps in the reevant shapes
+    if T_dur < 2 * ramp_time:
+        if mean_shape == ("trapezoid" or "step"):
+            T_dur += 2 * ramp_time
+        elif mean_shape == "step-sinusoid":
+            T_dur += ramp_time
+
+    time = np.arange(
+        0, T_dur + 2 * zero_time, dt
+    )  # pad total time to add zero input start and end.
+    if mean_shape == "DC":
         # Compute the number of samples for each phase
-        zero_len = int(round(0.00 * T_dur) / dt)  # Zero start and end
-        ramp_len = int(round(0.16 * T_dur) / dt)  # Ramp-up and ramp-down
-        hold_len = int(round(0.68 * T_dur) / dt)  # + 1  # Hold phase
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
+        ramp_len = int(round(ramp_time) / dt)  # Ramp-up and ramp-downz
+        hold_len = int(round(T_dur - 2 * ramp_time) / dt)  # + 1  # Hold phase
+
+        # Create each section
+        zero_segment = np.zeros(zero_len)
+        ramp_up = np.linspace(0, max_I, ramp_len)
+        hold_segment = np.full(hold_len, max_I)
+        ramp_down = np.flip(np.linspace(0, max_I, ramp_len))
+
+        mean_drive = np.concatenate(
+            [zero_segment, ramp_up, hold_segment, ramp_down, zero_segment]
+        )
+
+    elif mean_shape == "trapezoid":
+        # Compute the number of samples for each phase
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
+        ramp_len = int(round(ramp_time) / dt)  # Ramp-up and ramp-down
+        hold_len = int(round(T_dur - 2 * ramp_time) / dt)  # + 1  # Hold phase
 
         # Create each section
         zero_segment = np.zeros(zero_len)
@@ -59,62 +102,78 @@ def cortical_input(
 
     elif mean_shape == "triangular":
         # Compute the number of samples for each phase
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
         ramp_len = int(round(0.5 * T_dur) / dt)  # Ramp-up and ramp-down
 
         # Create each section
+        zero_segment = np.zeros(zero_len)
         ramp_up = np.linspace(0, max_I, ramp_len)
         ramp_down = np.flip(np.linspace(0, max_I, ramp_len))
 
-        mean_drive = np.concatenate([ramp_up, ramp_down])
+        mean_drive = np.concatenate([zero_segment, ramp_up, ramp_down, zero_segment])
 
     elif mean_shape == "sinusoid.hz":
 
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
         time_sin = np.arange(0, T_dur, dt)  # Time vector
 
         # Generate the sinusoidal wave
         sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * time_sin)
+        zero_segment = np.zeros(zero_len)
 
         # Normalize to range [0, max_I]
-        mean_drive = max_I * (sine_wave + 1) / 2
+        mean_drive = np.concatenate(
+            [zero_segment, (max_I * (sine_wave + 1) / 2), zero_segment]
+        )
 
     elif mean_shape == "step-sinusoid":
-
         # Compute the number of samples for each phase
-        ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
-        hold_len = int(round((4 / 12) * T_dur) / dt)  # Hold phase
-        sine_len = int(round((6 / 12) * T_dur) / dt)  # Sine Phase
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
+        ramp_len = int(round(ramp_time) / dt)  # Ramp-up
+        hold_len = int(round((T_dur - ramp_time) / 2) / dt)  # Hold phase
+        sine_len = int(round((T_dur - ramp_time) / 2) / dt)  # Sine Phase
 
         # Create each section
-
-        ramp_up = np.linspace(0, 2 / 3 * max_I, ramp_len)
-        hold_segment = np.full(hold_len, 2 / 3 * max_I)
+        zero_segment = np.zeros(zero_len)
+        ramp_up = np.linspace(0, max_I, ramp_len)
+        hold_segment = np.full(hold_len, max_I)
 
         # Generate the sinusoidal wave
         time_sin = np.arange(0, sine_len)  # Time vector
         sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * time_sin)
 
         # Normalize to range []
-        sine_segment = 2 / 3 * max_I + (max_I / 3 * (sine_wave))
-        mean_drive = np.concatenate([ramp_up, hold_segment, sine_segment])
+        sine_segment = max_I + (max_I / 3 * (sine_wave))
+        mean_drive = np.concatenate(
+            [zero_segment, ramp_up, hold_segment, sine_segment, zero_segment]
+        )
 
     else:  # elif mean_shape == "step":
 
         # Compute the number of samples for each phase
+        zero_len = int(round(zero_time) / dt)  # Zero start and end
         ramp_len = int(round((2 / 12) * T_dur) / dt)  # Ramp-up
         hold_len = int(round((4 / 12) * T_dur) / dt)  # Hold phase
 
         # Create each section
-
+        zero_segment = np.zeros(zero_len)
         ramp_up_1 = np.linspace(0, 0.5 * max_I, ramp_len)
         hold_segment_1 = np.full(hold_len, 0.5 * max_I)
         ramp_up_2 = np.linspace(0.5 * max_I, max_I, ramp_len)
         hold_segment_2 = np.full(hold_len, max_I)
 
         mean_drive = np.concatenate(
-            [ramp_up_1, hold_segment_1, ramp_up_2, hold_segment_2]
+            [
+                zero_segment,
+                ramp_up_1,
+                hold_segment_1,
+                ramp_up_2,
+                hold_segment_2,
+                zero_segment,
+            ]
         )
 
-    mean_CI = max(mean_drive)
+    mean_CI = max_I  # max(mean_drive)
 
     # Filter design
     b_low, a_low = signal.butter(2, 100 / fs * 2, "low")  # Low-pass filter
@@ -163,62 +222,89 @@ def cortical_input(
     return CI
 
 
-def _main():
-    # Example Usage
-    T_dur = 60e3  # Total time in ms
-    dt = 0.1  # Time step in ms
-    n_mn = 300  # Number of motor neurons
-    n_clust = 3  # Number of clusters
-    max_I = 9  # Max input current (nA)
-    CCoV = 10  # Common noise CoV (%)
-    ICoV = 5  # Independent noise CoV (%)
-    signal_shape = "step-sinusoid"
-    freq = 0.2
+def plot_CI():
 
     CI_sinus = cortical_input(
-        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, signal_shape, freq
+        MN_POOL_SIZE,
+        N_CLUST,
+        INPUT_AMP,
+        T_SIM,
+        DT_SIM,
+        CCOV,
+        ICOV,
+        "step-sinusoid",
+        freq=0.2,
     )
 
     CI_trap = cortical_input(
-        n_mn, n_clust, max_I, T_dur, dt, CCoV, ICoV, "trapezoid", freq
+        MN_POOL_SIZE,
+        N_CLUST,
+        INPUT_AMP,
+        T_SIM,
+        DT_SIM,
+        CCOV,
+        ICOV,
+        "trapezoid",
     )
 
     plt.figure(figsize=(18, 10))
     plt.tight_layout()
-    time = np.linspace(0, T_dur, CI_trap.shape[0])
+    time = np.linspace(0, T_SIM, CI_trap.shape[0])
 
     plt.subplot(2, 1, 1)
     plt.plot(time * 1e-3, CI_trap[:, 50], label=f"Neuron {50}")
-    plt.axhline(max_I, color="r", ls="--", alpha=0.4)
+    plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
     plt.title(f"Trapezoid input")
 
     plt.subplot(2, 1, 2)
     plt.plot(time * 1e-3, CI_sinus[:, 50], label=f"Neuron {50}")
-    plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
+    plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
     plt.title(f"Trapezoid + 2hz Sinusoid input")
 
-    # # Plot the first motor neuron's cortical input
-    # plt.figure(1, figsize=(8, 6))
-    # time = np.linspace(0, T_dur, CI.shape[0])
-    # # for i in range(5):  # Plot first 5 neurons
-    # # plt.plot(time, CI[:, i], label=f"Neuron {i+1}")
-    # plt.plot(time, CI[:, 50], label=f"Neuron {50}")
-    # # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
-    # # plt.plot(time, CI[:, 250], label=f"Neuron {250}")
-    # plt.axhline(2 / 3 * max_I, color="r", ls="--", alpha=0.4)
-    # plt.xlabel("Time (ms)")
-    # plt.ylabel("Current (nA)")
-    # plt.title(f"Cortical Input for Neuron {50}")
-
     os.makedirs("figures", exist_ok=True)
-    if CCoV > 0 or ICoV > 0:
+    if CCOV > 0 or ICOV > 0:
         plt.savefig(f"figures/CI_withNoise.png")
     else:
         plt.savefig(f"figures/CI.png")
+
+    print("Figure saved in figures/.. folder")
+
+
+def test_CoV():
+
+    CI_DC = cortical_input(
+        MN_POOL_SIZE,
+        N_CLUST,
+        INPUT_AMP,
+        T_SIM,
+        DT_SIM,
+        CCOV,
+        ICOV,
+        "DC",
+    )
+
+    mean_activity = CI_DC.mean(axis=0)  # Mean cortical input per neuron
+    std_activity = CI_DC.std(axis=0)  # Standard deviation per neuron
+
+    CoV_CI_DC = std_activity / mean_activity
+    print(f"max CoV for DC CI = {np.max(CoV_CI_DC)}")
+
+    ## Results:
+    # For CCov = 10 and ICoV = 5 -> output CoV = ca. 0.113...
+    # For CCov = 20 and ICoV = 5 -> output CoV = ca. 0.207...
+    # For CCov = 15 and ICoV = 5 -> output CoV = ca. 0.16...
+    # For CCov = 0 and ICoV = 5 -> output CoV = ca. 0.051...
+    # !!! For CCov = 14 and ICoV = 5 -> output CoV = ca. 0.15...
+
+
+def _main():
+
+    # plot_CI()
+    test_CoV()
 
     # plt.figure(2, figsize=(12, 6))
     # sns.heatmap(
@@ -228,19 +314,6 @@ def _main():
     # plt.ylabel("Neurons")
     # plt.title("Cortical Input Heatmap")
 
-    # mean_activity = CI.mean(axis=0)  # Mean cortical input per neuron
-    # std_activity = CI.std(axis=0)  # Standard deviation per neuron
-
-    # CoV_CI = std_activity / mean_activity
-
-    # print(f"max CoV for CI = {np.max(CoV_CI)}")
-
-    # print("Mean cortical input per neuron:")
-    # print(mean_activity)
-
-    # print("\nStandard deviation per neuron:")
-    # print(std_activity)
-    #
     plt.show()
 
 
