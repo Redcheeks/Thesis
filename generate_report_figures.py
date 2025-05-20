@@ -34,7 +34,7 @@ def run_model(
 ) -> List[Tuple[Neuron, Tuple[np.ndarray, np.ndarray]]]:
     results = []
     for neuron in neurons:
-        Iinj = CI[: int(T / DT), neuron.number]
+        Iinj = Iinj = CI[:, neuron.number]
         output = model_class.simulate_neuron(T, DT, neuron=neuron, Iinj=Iinj)
         # output may have 2 or 3 or 4 elements depending on model
         if model_class == LIF_Model3v2:
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     ):
         results = []
         for neuron in neurons:
-            Iinj = CI[: int(T / DT), neuron.number]
+            Iinj = Iinj = CI[:, neuron.number]
             if model_class == LIF_Model3v2 or model_class == LIF_Model3:
                 voltage, spikes, inhibition, reset = model_class.simulate_neuron(
                     T, DT, neuron=neuron, Iinj=Iinj

@@ -164,9 +164,7 @@ def _main():
     simulation_results = [
         (
             b,
-            model_choice.simulate_neuron(
-                T, DT, neuron=b, Iinj=CI[: int(T / DT), b.number]
-            ),
+            model_choice.simulate_neuron(T, DT, neuron=b, Iinj=CI[:, b.number]),
         )
         for b in neurons_to_simulate
     ]

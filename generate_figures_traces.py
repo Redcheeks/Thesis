@@ -17,7 +17,7 @@ In MAIN - Make sure correct model is uncommented
 For details on how plots are made, see the relevant method
 
 """  ## ------------- Simulation Parameters ------------- ##
-T = 1000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
+T = 3000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
@@ -25,14 +25,18 @@ neuron_pool_size = 300  # Total number of Neurons in the pool
 
 number_of_clusters = 3  # Number of clusters
 max_I = 9  # Max input current (nA)
-CCoV = 0  # Cluster-common noise CoV (%)
-ICoV = 0  # Independent noise CoV (%)
-signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+CCoV = 0  # 14  # Cluster-common noise CoV (%)
+ICoV = 0  # 5  # Independent noise CoV (%)
+signal_type = "trapezoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
 freq = 2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [10, 20, 30, 45]
+NEURON_INDEXES: List[int] = [60, 70, 85, 90, 91]
+MODELS = zip(
+    [LIF_Model1, LIF_Model2v3, LIF_Model3],
+    ["LIF_Model1", "LIF_Model2v3", "LIF_Model3"],
+)
 
 
 def run_model(
@@ -57,7 +61,8 @@ def plot_voltage_traces(
     CI: np.ndarray,
     model_name: str,
 ) -> None:
-    time = np.arange(0, len(CI) * DT, 1)
+    time = np.linspace(0, len(CI) * DT, len(CI))
+
     import math
 
     rows = int(np.ceil(np.sqrt(len(simulation_data))))
@@ -105,7 +110,8 @@ def plot_inhibition_traces(
     CI: np.ndarray,
     model_name: str,
 ) -> None:
-    time = np.arange(0, len(CI) * DT, 1)
+    time = np.linspace(0, len(CI) * DT, len(CI))
+
     # For Model 3, we want 3 columns (Voltage, Inhibition, Reset)
     ncols = 3 if (model_name == "LIF_Model3v2" or model_name == "LIF_Model3") else 2
     figsize = (
@@ -220,7 +226,7 @@ def plot_inhibition_traces(
 def plot_cortical_input(CI: np.ndarray):
 
     plt.figure(1, figsize=(8, 6))
-    time = np.arange(0, len(CI) * DT, 1)
+    time = np.linspace(0, len(CI) * DT, len(CI))
 
     plt.plot(time, CI[:, 50], label=f"Neuron {50}")
     # plt.plot(time, CI[:, 150], label=f"Neuron {150}")
@@ -257,13 +263,10 @@ if __name__ == "__main__":
     neurons = [all_neurons[i] for i in NEURON_INDEXES]
 
     # Run models 1,2 and 3 and plot voltage trace, optional: inhibition, excitation
-    for model_class, name in zip(
-        [LIF_Model1, LIF_Model2v3, LIF_Model3, LIF_Model3v2],
-        ["LIF_Model1", "LIF_Model2v3", "LIF_Model3", "LIF_Model3v2"],
-    ):
+    for model_class, name in MODELS:
         results = []
         for neuron in neurons:
-            Iinj = CI[: int(T / DT), neuron.number]
+            Iinj = CI[:, neuron.number]
             if model_class == LIF_Model3v2 or model_class == LIF_Model3:
                 voltage, spikes, inhibition, reset = model_class.simulate_neuron(
                     T, DT, neuron=neuron, Iinj=Iinj
