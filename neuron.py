@@ -7,6 +7,9 @@ V_THRESHOLD: np.float64 = -50  # Threshold potential in mV
 V_RESET: np.float64 = -75.0  # Hyperpolarization, membrane potential in mV
 V_INIT: np.float64 = -70.0  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
+RHEOBASE_EXCITABILITY_RANGE: np.float64 = (
+    10  # maximum diff of input to rheobase for reset change
+)
 
 TREF_FRAC_AHP: np.float64 = 0.05  # t_ref as a fraction of AHP.
 SOMA_DIAM_MIN_METER: np.float64 = 50e-6
@@ -158,7 +161,7 @@ class Neuron:
         #TODO : How far is the increased excitability distributed?
         """
         delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
-        max_rheobase_diff = 5  # 5 nA
+        max_rheobase_diff = RHEOBASE_EXCITABILITY_RANGE  # 5 nA
 
         if delta_I >= max_rheobase_diff:
             return (
@@ -181,7 +184,7 @@ class Neuron:
         Simulates decreased excitability following a doublet spike.
         """
         delta_I = abs(self.I_rheobase - Iinj_it)
-        max_rheobase_diff = 5  # nA
+        max_rheobase_diff = RHEOBASE_EXCITABILITY_RANGE  # nA
 
         if delta_I >= max_rheobase_diff:
             V_reset = self.V_reset_mV
