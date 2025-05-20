@@ -16,7 +16,7 @@ def _main():
     )
     ## ---------------- CHOOSE WHICH DATA TO PLOT! ---------------- ##
 
-    data_to_plot = trapezoid_sinusoid2hz
+    data_to_plot = trapezoid
 
     plt.ion()  # Turn on interactive mode
 
