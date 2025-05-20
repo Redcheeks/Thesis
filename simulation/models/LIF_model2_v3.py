@@ -115,14 +115,14 @@ class LIF_Model2v3(TimestepSimulation):
             # From Kudina 1989 - increased exciytability for 20msec post spike for neurons that are able to produce doublets???
             # From Halonen 1977 - the ISI post doublet is approx 1.5 times the ISI of previous spikes. Assumed to be due to prolonged Afterhyperpolarization period. (Kudina 2013, Kudina 2010 and many more give similar numbers!)
             if (
-                excitability == 1 and last_spike_counter > 4 / timestep
+                excitability == 1 and last_spike_counter > 8 / timestep
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
                     neuron.V_reset_mV - V_reset_it
                 )  # Instant decay of delayed depolarization bump
                 V_reset_it = neuron.V_reset_mV
-            # Post-doublet depression ends naturally, no need to reset it until next spike..
+            # Post-doublet depression ends naturally, this might not be needed..
             # elif (
             #     excitability == -1 and last_spike_counter > 50 / timestep
             # ):  # decreased excitability recovers after 50-200msec.. (Brooks 1950)

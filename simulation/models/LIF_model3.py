@@ -124,7 +124,7 @@ class LIF_Model3(TimestepSimulation):
 
             ## See comments in LIF_Model2v3 for more info on below code.
             if (
-                excitability == 1 and last_spike_counter > 4 / timestep
+                excitability == 1 and last_spike_counter > 8 / timestep
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
