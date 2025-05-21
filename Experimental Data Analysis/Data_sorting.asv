@@ -13,7 +13,7 @@ ignore_period = 10 * fs; % Convert to samples
 
 % Calculate activation times based on the 8th firing within 1 second
 min_fires = 10; %amount of spikes in a timeframe
-per_time = 1.5;% time frame
+per_time = 0;% time frame
 
 for i = 1:length(discharge_times)
     times = discharge_times{i} / fs;

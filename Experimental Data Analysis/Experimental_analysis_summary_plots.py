@@ -169,7 +169,7 @@ def heatmap(data_to_plot):
         linewidth=0.5,
         alpha=0.7,
     )
-    ax2.set_ylabel("Force (N)", color="blue")
+    ax2.set_ylabel("Force (% MVC)", color="blue")
     ax2.tick_params(axis="y", colors="blue")
 
     plt.tight_layout()
@@ -184,7 +184,7 @@ def force_curve(data, data_name: str):
     plt.plot(time, force, color="blue")
     plt.title(f"{data_name}")
     plt.xlabel("Time (s)")
-    plt.ylabel("Force (N)")
+    plt.ylabel("Force (% MVC)")
 
 
 def _main():
@@ -194,9 +194,16 @@ def _main():
         "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
     )
     trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
+    trapezoid_fs = int(trapezoid["fs"])
+
+    trapezoid["force"] = (
+        trapezoid["force"]
+        / np.mean(trapezoid["force"][0][20 * trapezoid_fs : 70 * trapezoid_fs])
+        * 20
+    )  # nomralized using the central flat section.
 
     trapezoid_repetitive = scipy.io.loadmat(
-        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_sustained_weighted_sorted.mat"
+        "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_sorted.mat"
     )
 
     ## ---------------- PLOT FORCE CURVES FOR ALL 3 DATA FILES ---------------- ##
