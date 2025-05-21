@@ -54,9 +54,12 @@ def cortical_input(
     if mean_shape == "DC":
         zero_time = 0
         ramp_time = 0
+    elif mean_shape == "step-sinusoid":
+        ramp_time = 2.5e3  # 5seconds long ramp
+        zero_time = 1e3  # 2 seconds zero time
     else:
-        ramp_time = 5e3  # 5seconds long ramp
-        zero_time = 2e3  # 2 seconds zero time
+        ramp_time = 2.5e3  # 5seconds long ramp
+        zero_time = 0.5e3  # 2 seconds zero time
 
     # If T_dur is to short, add time for ramps in the reevant shapes
     if T_dur < 2 * ramp_time:
@@ -143,12 +146,12 @@ def cortical_input(
         sine_wave = np.sin(-0.5 * np.pi + 2 * np.pi * freq * time_sin)
 
         # Normalize to range []
-        sine_segment = max_I + (max_I / 3 * (sine_wave))
+        sine_segment = max_I + (1 / 2 * max_I * (sine_wave))
         mean_drive = np.concatenate(
             [zero_segment, ramp_up, hold_segment, sine_segment, zero_segment]
         )
 
-    else:  # elif mean_shape == "step":
+    elif mean_shape == "step":
 
         # Compute the number of samples for each phase
         zero_len = int(round(zero_time) / dt)  # Zero start and end
@@ -172,6 +175,9 @@ def cortical_input(
                 zero_segment,
             ]
         )
+    else:
+        print(f"{mean_shape} is not a valid option")
+        exit()
 
     mean_CI = max_I  # max(mean_drive)
 
@@ -249,17 +255,18 @@ def plot_CI():
 
     plt.figure(figsize=(18, 10))
     plt.tight_layout()
-    time = np.linspace(0, T_SIM, CI_trap.shape[0])
+    time_trap = np.linspace(0, CI_trap.shape[0], CI_trap.shape[0]) * 1e-3 * DT_SIM
+    time_sin = np.linspace(0, CI_trap.shape[0], CI_sinus.shape[0]) * 1e-3 * DT_SIM
 
     plt.subplot(2, 1, 1)
-    plt.plot(time * 1e-3, CI_trap[:, 50], label=f"Neuron {50}")
+    plt.plot(time_trap, CI_trap[:, 50], label=f"Neuron {50}")
     plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
     plt.title(f"Trapezoid input")
 
     plt.subplot(2, 1, 2)
-    plt.plot(time * 1e-3, CI_sinus[:, 50], label=f"Neuron {50}")
+    plt.plot(time_sin, CI_sinus[:, 50], label=f"Neuron {50}")
     plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
@@ -303,8 +310,8 @@ def test_CoV():
 
 def _main():
 
-    # plot_CI()
-    test_CoV()
+    plot_CI()
+    # test_CoV()
 
     # plt.figure(2, figsize=(12, 6))
     # sns.heatmap(
