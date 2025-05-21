@@ -21,6 +21,8 @@ threshold_high = 100  # doublet red threshold
 force_to_neuron_offset = (
     -0.2
 )  # [seconds] The time delay between the onset of an EMG signal and the measurable force output in muscle contraction, known as the electromechanical delay (EMD), is typically between 30 and 100 milliseconds (ms)
+FORCE_OVERLAY = False  # Force curve overlay on heatmap
+PLOT_FORCE_CURVE = True  # Plot force curves in seperate plot
 
 
 def heatmap(data_to_plot):
@@ -156,21 +158,22 @@ def heatmap(data_to_plot):
     ax.invert_yaxis()
 
     ## OPTIONAL: ------------ Overlay force curve on secondary y-axis
-    ax2 = ax.twinx()
-    time = np.linspace(
-        force_to_neuron_offset * 0.01 * fs,
-        downsampled_matrix.shape[1] + force_to_neuron_offset * 0.01 * fs,
-        total_time,
-    )
-    ax2.plot(
-        time,
-        force_curve[:total_time],
-        color="blue",
-        linewidth=0.5,
-        alpha=0.7,
-    )
-    ax2.set_ylabel("Force (% MVC)", color="blue")
-    ax2.tick_params(axis="y", colors="blue")
+    if FORCE_OVERLAY:
+        ax2 = ax.twinx()
+        time = np.linspace(
+            force_to_neuron_offset * 0.01 * fs,
+            downsampled_matrix.shape[1] + force_to_neuron_offset * 0.01 * fs,
+            total_time,
+        )
+        ax2.plot(
+            time,
+            force_curve[:total_time],
+            color="blue",
+            linewidth=0.5,
+            alpha=0.7,
+        )
+        ax2.set_ylabel("Force (% MVC)", color="blue")
+        ax2.tick_params(axis="y", colors="blue")
 
     plt.tight_layout()
 
@@ -190,75 +193,76 @@ def force_curve(data, data_name: str):
 def _main():
 
     ## ---------------- Import data ---------------- ##
-    trapezoid_sinusoid2hz = scipy.io.loadmat(
+    trap_sinus = scipy.io.loadmat(
         "Experimental Data Analysis/trapezoid10mvc_sinusoid2hz5to15mvc.mat"
     )
-    trapezoid = scipy.io.loadmat("Experimental Data Analysis/trapezoid20mvc.mat")
-    trapezoid_fs = int(trapezoid["fs"])
+    trapezoid = scipy.io.loadmat(
+        "Experimental Data Analysis/trapezoid20mvc_fixForce.mat"
+    )
 
-    trapezoid["force"] = (
-        trapezoid["force"]
-        / np.mean(trapezoid["force"][0][20 * trapezoid_fs : 70 * trapezoid_fs])
-        * 20
-    )  # nomralized using the central flat section.
-
-    trapezoid_repetitive = scipy.io.loadmat(
+    trap_repet = scipy.io.loadmat(
         "Experimental Data Analysis/trapezoid5mvc_repetitive_doublets_sorted.mat"
     )
 
-    ## ---------------- PLOT FORCE CURVES FOR ALL 3 DATA FILES ---------------- ##
-    plt.figure(figsize=(18, 10))
-    plt.subplot(3, 1, 1)
-    force_curve(trapezoid, "Trapezoid 20% MVC")
+    # Choose which data to plot and its title!
+    data_set = [trap_sinus, trapezoid, trap_repet]
+    data_names = [
+        "Trapezoid 5% MVC & 2hz Sinusoid - 5-15% MVC",
+        "Trapezoid 20% MVC",
+        "Trapezoid 5% MVC",
+    ]
 
-    plt.subplot(3, 1, 2)
-    force_curve(trapezoid_sinusoid2hz, "Trapezoid 5% MVC & 2hz Sinusoid - 5-15% MVC")
+    ## ---------------- PLOT FORCE CURVES FOR ALL DATA FILES ---------------- ##
+    if PLOT_FORCE_CURVE:
+        plt.figure(figsize=(18, 10))
+        plt.suptitle("Experimental Force Curves", fontweight="bold")
+        for index, [data, name] in enumerate(zip(data_set, data_names)):
 
-    plt.subplot(3, 1, 3)
-    force_curve(trapezoid_repetitive, "Trapezoid 5% MVC")
+            plt.subplot(len(data_set), 1, index + 1)
+            force_curve(data, name)
 
-    plt.subplots_adjust(hspace=0.5, top=0.9)
-    plt.suptitle("Experimental Force Curves", fontweight="bold")
+        plt.subplots_adjust(hspace=0.5, top=0.9)
 
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig(
-        f"figures/force_curves.png",
-    )
+        os.makedirs("figures", exist_ok=True)
+        plt.savefig(
+            f"figures/force_curves.png",
+        )
 
-    print("Figure generated in the 'figures/' folder.")
+        print("Force-Curve figure generated in the 'figures/' folder.")
 
     ## ---------------- PLOT HEATMAP FOR ALL 3 DATA FILES IN SEPERATE PLOTS ---------------- ##
-    plt.figure(figsize=(18, 8))
-    plt.subplot()
-    heatmap(trapezoid)
-    plt.subplots_adjust(top=0.83, right=1)
-    plt.suptitle("Trapezoid input at 20% MVC", fontweight="bold")
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig(
-        f"figures/experimental_heatmap_trapezoid.png",
-    )
+    for data, name in zip(data_set, data_names):
+        plt.figure(figsize=(18, 8))
+        plt.subplot()
+        heatmap(data)
+        plt.subplots_adjust(top=0.83, right=1)
+        plt.suptitle(name, fontweight="bold")
+        os.makedirs("figures", exist_ok=True)
+        plt.savefig(
+            f"figures/experimental_heatmap_{name}.png",
+        )
 
-    plt.figure(figsize=(18, 8))
-    plt.subplot()
-    heatmap(trapezoid_repetitive)
-    plt.subplots_adjust(top=0.83, right=1)
-    plt.suptitle("Trapezoid input at 5% MVC", fontweight="bold")
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig(
-        f"figures/experimental_heatmap_trapezoid_repetitive.png",
-    )
+    # plt.figure(figsize=(18, 8))
+    # plt.subplot()
+    # heatmap(trapezoid_repetitive)
+    # plt.subplots_adjust(top=0.83, right=1)
+    # plt.suptitle("Trapezoid input at 5% MVC", fontweight="bold")
+    # os.makedirs("figures", exist_ok=True)
+    # plt.savefig(
+    #     f"figures/experimental_heatmap_trapezoid_repetitive.png",
+    # )
 
-    plt.figure(figsize=(18, 8))
-    plt.subplot()
-    heatmap(trapezoid_sinusoid2hz)
-    plt.subplots_adjust(top=0.83, right=1)
-    plt.suptitle(
-        "Trapezoid input at 10% MVC + 2Hz-Sinus at 5-15%MVC", fontweight="bold"
-    )
-    os.makedirs("figures", exist_ok=True)
-    plt.savefig(
-        f"figures/experimental_heatmap_TrapSinus.png",
-    )
+    # plt.figure(figsize=(18, 8))
+    # plt.subplot()
+    # heatmap(trapezoid_sinusoid2hz)
+    # plt.subplots_adjust(top=0.83, right=1)
+    # plt.suptitle(
+    #     "Trapezoid input at 10% MVC + 2Hz-Sinus at 5-15%MVC", fontweight="bold"
+    # )
+    # os.makedirs("figures", exist_ok=True)
+    # plt.savefig(
+    #     f"figures/experimental_heatmap_TrapSinus.png",
+    # )
 
     ## ----------------  ----------------  ----------------  ---------------- ##
     print("Figures generated in the 'figures/' folder.")
