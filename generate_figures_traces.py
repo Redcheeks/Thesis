@@ -17,26 +17,51 @@ In MAIN - Make sure correct model is uncommented
 For details on how plots are made, see the relevant method
 
 """  ## ------------- Simulation Parameters ------------- ##
-T = 3000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
+T = 4000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
 DT = 0.1  # Time step in [ms]
 neuron_pool_size = 300  # Total number of Neurons in the pool
 
 ## ------ Cortical input Simulation Parameters ------ ##
 
 number_of_clusters = 3  # Number of clusters
-max_I = 9  # Max input current (nA)
+max_I = 6  # Max input current (nA)
 CCoV = 0  # 14  # Cluster-common noise CoV (%)
 ICoV = 0  # 5  # Independent noise CoV (%)
-signal_type = "trapezoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
-freq = 2  # Frequency for sinusoid
+signal_type = "step-sinusoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+freq = 0.2  # Frequency for sinusoid
 
 
 ## ------ Neurons to be modelled & plotted. ------ ##
-NEURON_INDEXES: List[int] = [60, 70, 85, 90, 91]
+NEURON_INDEXES: List[int] = [21, 22, 23, 24]
 MODELS = zip(
     [LIF_Model1, LIF_Model2v3, LIF_Model3],
     ["LIF_Model1", "LIF_Model2v3", "LIF_Model3"],
 )
+
+
+## FOR FIGURES IN REPORT RESULTS:
+
+# ## ------------- Simulation Parameters ------------- ##
+# T = 4000  # Simulation Time [ms] (Overall time might differ as CI can increase this if needed)
+# DT = 0.1  # Time step in [ms]
+# neuron_pool_size = 300  # Total number of Neurons in the pool
+
+# ## ------ Cortical input Simulation Parameters ------ ##
+
+# number_of_clusters = 3  # Number of clusters
+# max_I = 9  # Max input current (nA)
+# CCoV = 14  # 14  # Cluster-common noise CoV (%)
+# ICoV = 5  # 5  # Independent noise CoV (%)
+# signal_type = "trapezoid"  # Options: "sinusoid.hz" -- "trapezoid" -- "triangular" -- "step-sinusoid" -- "step"
+# freq = 0.2  # Frequency for sinusoid
+
+
+# ## ------ Neurons to be modelled & plotted. ------ ##
+# NEURON_INDEXES: List[int] = [35, 80, 95, 150]
+# MODELS = zip(
+#     [LIF_Model1, LIF_Model2v3, LIF_Model3],
+#     ["LIF_Model1", "LIF_Model2v3", "LIF_Model3"],
+# )
 
 
 def run_model(
@@ -82,7 +107,7 @@ def plot_voltage_traces(
                     sp[j], color="blue", ls="--", lw=1, alpha=0.7, label="_nolegend_"
                 )
 
-        ax.set_ylim([-80, -20])
+        ax.set_ylim([-85, -30])
         ax.axhline(neuron.V_th_mV, color="k", ls="--", label="Threshold")
         ax.set_ylabel("Membrane Potential (mV)")
         ax.set_xlabel("Time (ms)")
@@ -102,7 +127,7 @@ def plot_voltage_traces(
         handles=custom_lines, loc="upper center", bbox_to_anchor=(0.5, 0.94), ncol=2
     )
     os.makedirs("figures", exist_ok=True)
-    plt.savefig(f"figures/{model_name}_output.png")
+    plt.savefig(f"figures/output_{signal_type}_{model_name}.png")
 
 
 def plot_inhibition_traces(
@@ -135,79 +160,84 @@ def plot_inhibition_traces(
             v, sp, inhib, reset = values
             # Voltage subplot
             ax_v = axs[i][0]
-            ax_v.plot(time, v)
+            ax_v.plot(time * 1e-3, v)
             for spike_time in sp:
-                ax_v.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+                ax_v.axvline(spike_time * 1e-3, color="gray", ls="--", alpha=0.4)
             for j in range(1, len(sp)):
                 isi = sp[j] - sp[j - 1]
                 if 3 <= isi <= 10:
-                    ax_v.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
+                    ax_v.axvline(sp[j] * 1e-3, color="blue", ls="--", lw=1, alpha=0.7)
             ax_v.axhline(neuron.V_th_mV, color="k", ls="--")
             ax_v.set_ylabel("Membrane Potential (mV)")
             ax_v.set_title(f"Neuron {neuron.number} - Voltage")
+            ax_v.set_ylim([-90, -15])
+            ax_v.set_xlabel("Time (s)")
 
             # Inhibition subplot
             ax_i = axs[i][1]
-            ax_i.plot(time, inhib, color="orange")
+            ax_i.plot(time * 1e-3, inhib, color="orange")
             ax_i.set_ylabel("Inhibition Level")
             ax_i.set_title(f"Neuron {neuron.number} - Inhibition trace")
             for spike_time in sp:
-                ax_i.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+                ax_i.axvline(spike_time * 1e-3, color="gray", ls="--", alpha=0.4)
             for j in range(1, len(sp)):
                 isi = sp[j] - sp[j - 1]
                 if 3 <= isi <= 10:
-                    ax_i.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
-            ax_i.set_xlabel("Time (ms)")
+                    ax_i.axvline(sp[j] * 1e-3, color="blue", ls="--", lw=1, alpha=0.7)
+            ax_i.set_xlabel("Time (s)")
 
             # Reset voltage subplot
             ax_r = axs[i][2]
-            ax_r.plot(time, reset, color="r")
+            ax_r.plot(time * 1e-3, reset, color="r")
             ax_r.set_ylabel("Reset Voltage (mV)")
             ax_r.set_title(f"Neuron {neuron.number} - Reset Voltage trace")
             for spike_time in sp:
-                ax_r.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+                ax_r.axvline(spike_time * 1e-3, color="gray", ls="--", alpha=0.4)
             for j in range(1, len(sp)):
                 isi = sp[j] - sp[j - 1]
                 if 3 <= isi <= 10:
-                    ax_r.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
-            ax_r.set_xlabel("Time (ms)")
+                    ax_r.axvline(sp[j] * 1e-3, color="blue", ls="--", lw=1, alpha=0.7)
+            ax_r.set_xlabel("Time (s)")
         else:
             v, sp, inhib = values
             # Voltage trace with spikes
             ax_v = axs[i][0]
-            ax_v.plot(time, v)
+            ax_v.plot(time * 1e-3, v)
             for spike_time in sp:
-                ax_v.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+                ax_v.axvline(spike_time * 1e-3, color="gray", ls="--", alpha=0.4)
             for j in range(1, len(sp)):
                 isi = sp[j] - sp[j - 1]
                 if 3 <= isi <= 10:
-                    ax_v.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
+                    ax_v.axvline(sp[j] * 1e-3, color="blue", ls="--", lw=1, alpha=0.7)
             ax_v.axhline(neuron.V_th_mV, color="k", ls="--")
             ax_v.set_ylabel("Membrane Potential (mV)")
             ax_v.set_title(f"Neuron {neuron.number} - Voltage")
+            ax_v.set_ylim([-90, -15])
+            ax_v.set_xlabel("Time (s)")
 
             # Inhibition or Boost trace
             ax_i = axs[i][1]
             if model_name == "LIF_Model2v2":
-                ax_i.plot(time, inhib, color="r")
+                ax_i.plot(time * 1e-3, inhib, color="r")
                 ax_i.set_ylabel("ADP Boost")
                 ax_i.set_title(f"Neuron {neuron.number} - Excitability Boost factor")
             elif model_name == "LIF_Model1":
-                ax_i.plot(time, inhib, color="orange")
+                ax_i.plot(time * 1e-3, inhib, color="orange")
                 ax_i.set_ylabel("Inhibition Level")
                 ax_i.set_title(f"Neuron {neuron.number} - Inhibition trace")
+
             else:
-                ax_i.plot(time, inhib, color="r")
+                ax_i.plot(time * 1e-3, inhib, color="r")
                 ax_i.set_ylabel("Reset Voltage (mV)")
                 ax_i.set_title(f"Neuron {neuron.number} - Reset Voltage trace")
             for spike_time in sp:
-                ax_i.axvline(spike_time, color="gray", ls="--", alpha=0.4)
+                ax_i.axvline(spike_time * 1e-3, color="gray", ls="--", alpha=0.4)
             # Add ISI blue lines for doublets
             for j in range(1, len(sp)):
                 isi = sp[j] - sp[j - 1]
                 if 3 <= isi <= 10:
-                    ax_i.axvline(sp[j], color="blue", ls="--", lw=1, alpha=0.7)
-            ax_i.set_xlabel("Time (ms)")
+                    ax_i.axvline(sp[j] * 1e-3, color="blue", ls="--", lw=1, alpha=0.7)
+            ax_i.set_xlabel("Time (s)")
 
     from matplotlib.lines import Line2D
 
@@ -220,7 +250,7 @@ def plot_inhibition_traces(
     )
     plt.tight_layout(rect=[0, 0, 1, 0.93])
     os.makedirs("figures", exist_ok=True)
-    plt.savefig(f"figures/{model_name}_inhibition.png")
+    plt.savefig(f"figures/inhibition_{signal_type}_{model_name}.png")
 
 
 def plot_cortical_input(CI: np.ndarray):
