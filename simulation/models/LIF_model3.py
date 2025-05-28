@@ -52,8 +52,8 @@ class LIF_Model3(TimestepSimulation):
         excitability = 0  # Track if neuron has increased excitability, 1 = increased, 0 = normal, -1 = post doublet
         inhib_decay_factor = 0.0
 
-        # Decay is based on Purvis & Butera I_SK current: K2=0.04; %decay rate constant representing calcium uptake and diffusion (ms)
-        tau = 100.0  # Adjust this value for your desired decay time
+        # Decay is based on Purvis & Butera I_SK current: K2=0.04 -> tau = 100, K2 = decay rate constant representing calcium uptake and diffusion (ms)
+        tau = 100  # 100.0  # Adjust this value for your desired decay time
 
         for it in range(simulation_steps - 1):
 

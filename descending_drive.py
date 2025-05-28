@@ -19,6 +19,20 @@ ICOV = 5  # Independent noise CoV (%)
 # Note: Signal shape and frequency are to be set in the plot_CI()
 
 
+## ------------- Plotting text-sizes ------------- ##
+import matplotlib.pylab as pylab
+
+params = {
+    "legend.fontsize": "large",
+    "axes.labelsize": "large",
+    "axes.titlesize": "x-large",
+    "xtick.labelsize": "medium",
+    "ytick.labelsize": "medium",
+    "figure.titlesize": "xx-large",
+}
+pylab.rcParams.update(params)
+
+
 def cortical_input(
     n_mn, n_clust, max_I, T_dur, dt, CCoV=20, ICoV=5, mean_shape="trapezoid", freq=0.2
 ):
@@ -55,11 +69,11 @@ def cortical_input(
         zero_time = 0
         ramp_time = 0
     elif mean_shape == "step-sinusoid":
-        ramp_time = 2.5e3  # 5seconds long ramp
-        zero_time = 1e3  # 2 seconds zero time
+        ramp_time = 5e3  # 5seconds long ramp
+        zero_time = 1e3  # 1 seconds zero time
     else:
-        ramp_time = 2.5e3  # 5seconds long ramp
-        zero_time = 0.5e3  # 2 seconds zero time
+        ramp_time = 1e3  # 4seconds long ramp
+        zero_time = 0.5e3  # 1 seconds zero time
 
     # If T_dur is to short, add time for ramps in the reevant shapes
     if T_dur < 2 * ramp_time:
@@ -253,25 +267,31 @@ def plot_CI():
         "trapezoid",
     )
 
-    plt.figure(figsize=(18, 10))
+    plt.figure(figsize=(11, 7))
     plt.tight_layout()
     time_trap = np.linspace(0, CI_trap.shape[0], CI_trap.shape[0]) * 1e-3 * DT_SIM
     time_sin = np.linspace(0, CI_trap.shape[0], CI_sinus.shape[0]) * 1e-3 * DT_SIM
 
     plt.subplot(2, 1, 1)
-    plt.plot(time_trap, CI_trap[:, 50], label=f"Neuron {50}")
+    plt.plot(time_trap, CI_trap[:, 50], "k", label=f"Neuron {50}", linewidth=0.5)
     plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
     plt.title(f"Trapezoid input")
 
     plt.subplot(2, 1, 2)
-    plt.plot(time_sin, CI_sinus[:, 50], label=f"Neuron {50}")
+    plt.plot(time_sin, CI_sinus[:, 50], "k", label=f"Neuron {50}", linewidth=0.5)
     plt.axhline(INPUT_AMP, color="r", ls="--", alpha=0.4)
     plt.xlabel("Time (s)")
     plt.ylabel("Current (nA)")
-    plt.title(f"Trapezoid + 2hz Sinusoid input")
+    plt.title(f"Trapezoid + 2 Hz Sinusoid input")
 
+    plt.tight_layout()
+    plt.suptitle(
+        f"Cortical Input with CCoV = {CCOV}%, ICCoV ={ICOV}%, I = {INPUT_AMP} nA",
+        fontweight="bold",
+    )
+    plt.subplots_adjust(top=0.9)
     os.makedirs("figures", exist_ok=True)
     if CCOV > 0 or ICOV > 0:
         plt.savefig(f"figures/CI_withNoise.png")
@@ -311,16 +331,6 @@ def test_CoV():
 def _main():
 
     plot_CI()
-    # test_CoV()
-
-    # plt.figure(2, figsize=(12, 6))
-    # sns.heatmap(
-    #     CI.T, cmap="coolwarm", xticklabels=1000, yticklabels=5
-    # )  # .T to transpose
-    # plt.xlabel("Time (samples)")
-    # plt.ylabel("Neurons")
-    # plt.title("Cortical Input Heatmap")
-
     plt.show()
 
 

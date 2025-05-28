@@ -42,7 +42,7 @@ class LIF_Model1(TimestepSimulation):
             100 / timestep
         )  # time since spike, used for doublet interval (3-10ms).
         renshaw_inhib = False  # is renshaw cell inhibiting
-        renshaw_reset = 200 / timestep
+        renshaw_reset = 200 / timestep  # 200ms rest needed = under 5Hz firing
         relax_counter = (
             renshaw_reset  # used to check for relaxation period for renshaw state.
         )
@@ -91,12 +91,12 @@ class LIF_Model1(TimestepSimulation):
                 relax_counter = 0.0
                 # v[it] = neuron.V_reset_mV  # reset voltage
 
-            ## ---- DOUBLET ---- ##
+            ## ---- DOUBLET ---- ## No need for voltage to be above threshold.
             elif (
                 (3 / timestep)
                 < last_spike_counter
                 < (10 / timestep)  # doublet interval
-                and Iinj[it] >= neuron.I_rheobase  # current threshold
+                and Iinj[it] >= neuron.Rheobase_threshold  # rheobase-threshold
                 and renshaw_inhib == False  # renshaw cell is not in inhibition state
             ):
                 rec_spikes.append(it)  # record spike event

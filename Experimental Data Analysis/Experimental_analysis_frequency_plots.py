@@ -2,6 +2,17 @@ import scipy.io
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
+Experimental Data Plotting code
+Plots frequency - time for each neuron. Click to cycle through the plot
+Does NOT save any figures.
+
+Choose which data to plot in _main()
+
+For details on how plots are made, see the relevant method
+
+"""
+
 
 def _main():
 
@@ -36,7 +47,7 @@ def _main():
         ax.plot(
             spikes / fs,
             isi_freq,
-            "o",
+            "ok",
         )
         ax.set_ylabel("Instantaneous Frequency [Hz]")
         ax.set_xlabel("Time [s]")
