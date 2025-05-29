@@ -4,6 +4,7 @@ _build
 _toc.yml
 models/__pycache__
 *.pyc
+.pylintrc
 
 .DS_Store
 figures/*
