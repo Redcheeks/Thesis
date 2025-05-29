@@ -26,7 +26,7 @@ class LIF_SIMPLE(TimestepSimulation):
         rec_sp          : recorded spike times [array]
         """
 
-        simulation_steps = len(np.arange(0, sim_time, dt))
+        simulation_steps = len(Iinj)
 
         # Initialize voltage
         v = np.zeros(simulation_steps)

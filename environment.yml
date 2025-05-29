@@ -12,3 +12,4 @@ dependencies:
   - pylint
   - black
   - seaborn
+  - brokenaxes

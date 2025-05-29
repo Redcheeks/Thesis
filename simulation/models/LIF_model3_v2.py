@@ -29,7 +29,7 @@ class LIF_Model3v2(TimestepSimulation):
         reset_trace     : reset voltage over time [array]
         """
 
-        simulation_steps = len(np.arange(0, sim_time, timestep))
+        simulation_steps = len(Iinj)
 
         # Initialize voltage
         v = np.zeros(simulation_steps)
@@ -49,6 +49,9 @@ class LIF_Model3v2(TimestepSimulation):
         peak_voltage = 20
         excitability = 0  # Track if neuron has increased excitability, 1 = increased, 0 = normal, -1 = post doublet
         doublet_block = 0.0
+
+        # Decay is based on Purvis & Butera I_SK current: K2=0.04; %decay rate constant representing calcium uptake and diffusion (ms)
+        tau = 100.0  # Adjust this value for your desired decay time
 
         for it in range(simulation_steps - 1):
 
@@ -76,15 +79,15 @@ class LIF_Model3v2(TimestepSimulation):
 
                     continue
 
-            elif v[it] >= neuron.V_th_mV:
+            elif v[it] >= neuron.V_th_mV:  # if voltage over threshold
                 ## ---- DOUBLET ---- ##
                 if (
                     last_spike_counter < 10 / timestep
                     and Iinj[it] >= neuron.I_rheobase
-                    and doublet_block
-                    < 0.5  # Adjust this threshold on how long to block for, future change: could be neuron-dependent..
+                    and doublet_block < 0.5
+                    # Adjust doubelt_block threshold on how long to block for, future change: could be neuron-dependent..
                 ):
-                    rec_spikes.append(it)
+                    rec_spikes.append(it)  # record spike event
                     peak_voltage = 18  # 18mV for doublet
                     v[it] = peak_voltage
                     # set new refractory time : double normal time.
@@ -92,22 +95,25 @@ class LIF_Model3v2(TimestepSimulation):
                     decay_steps = tr
                     last_spike_counter = 0.0
 
-                    doublet_block = 1.0
+                    doublet_block += 0.5 * (1.0 - doublet_block)
+                    # Alternatively.. doublet_block = np.min([doublet_block + 0.7, 1])
                     V_reset_it = neuron.V_reset_mV - 10
                     # Doublet block does not impact reset voltage.
                     excitability = -1
 
                 ## ---- NORMAL SPIKE ---- ##
                 else:
-                    rec_spikes.append(it)
+                    rec_spikes.append(it)  # record spike event
 
                     peak_voltage = 20
                     v[it] = peak_voltage  # 20mV more biologically accurate
                     tr = neuron.tref / timestep  # set refractory time
                     decay_steps = tr
+                    # ------- Calculate new reset voltage based on how close to rheobase current, taking inhibition into account!
+                    # simulates delayed depolarization bump and its intensity decay over time.
 
                     V_reset_it = neuron.calculate_v_reset(Iinj[it])
-                    doublet_block = 1.0
+                    doublet_block += 0.5 * (1.0 - doublet_block)
 
                     if V_reset_it > neuron.V_reset_mV:
                         excitability = 1
@@ -116,8 +122,9 @@ class LIF_Model3v2(TimestepSimulation):
 
                     last_spike_counter = 0.0
 
+            ## See comments in LIF_Model2v3 for more info on below code.
             if (
-                last_spike_counter > 2 / timestep and excitability == 1
+                excitability == 1 and last_spike_counter > 4 / timestep
             ):  # Check if doublet didnt occur from delayed. depol. bump => then return to normal excitability levels
                 excitability = 0
                 v[it] = v[it] + (
@@ -134,7 +141,9 @@ class LIF_Model3v2(TimestepSimulation):
             v[it + 1] = v[it] + dv
             last_spike_counter += 1
 
-            doublet_block *= np.exp(-timestep / 500.0)
+            # Decay is based on Purvis & Butera I_SK current: K2=0.04; %decay rate constant representing calcium uptake and diffusion (ms)
+
+            doublet_block *= np.exp(-timestep / tau)
 
             inhib_trace[it] = doublet_block
             reset_trace[it] = V_reset_it

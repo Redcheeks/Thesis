@@ -13,9 +13,16 @@
         "**/__pycache__": true,
         "models_legacy": true,
         "OLD---run_MAIN.py": true,
-        "plot_param.py": true,
+        "simulation/models/LIF_model3_v2.py": true,
+        "plot_param.py": false,
         "comparing_parameter_calc.py": true,
         "scripts/": true,
-        ".pylintrc": true
+        ".pylintrc": true,
+        ".gitattributes": true,
+        "citation.cff": true,
+        "MN_simulation_MAIN.py": true,
+        "Theory_figure_modeled.py": true,
+        "tests": true,
+        ".venv": true,
     }
 }

@@ -7,6 +7,9 @@ V_THRESHOLD: np.float64 = -50  # Threshold potential in mV
 V_RESET: np.float64 = -75.0  # Hyperpolarization, membrane potential in mV
 V_INIT: np.float64 = -70.0  # Initial potential in mV
 E_LEAK: np.float64 = -70.0  # leak reversal potential in mV
+MAX_RHEO_DIFF: np.float64 = 3  # maximum diff of input to rheobase for reset change
+DECAY_RHEO_DIFF = 0.16  # excitability decreases as current is further from rheobase
+# smaller decay factor means more elegible neurons get more higher excitability.
 
 TREF_FRAC_AHP: np.float64 = 0.05  # t_ref as a fraction of AHP.
 SOMA_DIAM_MIN_METER: np.float64 = 50e-6
@@ -15,8 +18,6 @@ SOMA_DIAM_MAX_METER: np.float64 = 100e-6
 # From francois github :
 #   # Assuming that soma diameter from human motoneurons vary between 50 and 100 micrometers, loosely based on https://journals.physiology.org/doi/full/10.1152/physiol.00021.2018 (mean diameter of humans MN estimated to be ~60 micrometers)
 #   # ^ "Scaling of motoneurons, From Mouse to Human" Manuel et al. Physiology (2018)
-
-# TODO Figure out size values, relationships maybe dont work for larger neurons??
 
 
 @dataclass(frozen=True)
@@ -39,7 +40,6 @@ class Neuron:
     V_init_mV: np.float64
     E_L_mV: np.float64
 
-    # TODO Write in thesis how unrealistic these arbitrary linear distributions are.
     doublet_rheobase_coefficient: np.float64
     """Rheobase coefficient for doublet threshold"""
 
@@ -67,7 +67,8 @@ class Neuron:
 
     @property
     def tref_seconds(self) -> np.float64:
-        """Refractory time in Seconds"""  # From Caillet table 4 - TODO look at AHP & refractory period. is AHP * 0.2 from Hug et al. reasonable??
+        """Refractory time in Seconds"""  # From Caillet table 4
+        # TODO look at AHP & refractory period. is AHP * 0.2 from Hug et al. reasonable??
         return TREF_FRAC_AHP * self.AHP_seconds  # Refractory time [s]
 
     @property
@@ -99,12 +100,12 @@ class Neuron:
         if self.distribution:
             R_unit = 3.1e-2 * np.pow(
                 self.I_rheobase_ampere, -0.96
-            )  # Input resistance [Ω]
+            )  # Membrane resistance [Ω]
         else:
             R_unit = 1.68e-10 * np.pow(
                 self.D_soma_meter * 5.5e-3, -2.43
-            )  # Input resistance [Ω]
-        return R_unit * 1e-6  # Input resistance [MΩ]
+            )  # Membrane resistance [Ω]
+        return R_unit * 1e-6  # Membrane resistance [MΩ]
 
     @property
     def tau_ms(self) -> np.float64:
@@ -115,25 +116,17 @@ class Neuron:
         )  # Membrane time constant [s]
         return tau_unit * 1e3  # Membrane time constant [ms]
 
-    # @property
-    # def S_soma_meter(self) -> np.float64:
-    #     """Soma Surface Area in [m^2]"""  # From Caillet table 4
-    #     return self.D_soma_meter * 5.5e-3  # square meters [m^2].
+    @property
+    def S_soma_meter(self) -> np.float64:
+        """Soma Surface Area in [m^2]"""  # From Caillet table 4
+        return self.D_soma_meter * 5.5e-3  # square meters [m^2].
 
-    # @property
-    # def S_soma(self) -> np.float64:
-    #     """Soma Surface Area in micro_Meters ^2"""
-    #     return (
-    #         self.S_soma_meter * 1e12  # mAtHEmAtiCs need to square the micro also
-    #     )  # Neuron surface area  [μ m^2]
-
-    # @property
-    # def R_Mohm(self) -> np.float64:
-    #     """Membrane Resistance in Mega_Ohm"""  # From Caillet table 4
-    #     R_unit = 1.68e-10 * np.pow(
-    #         self.D_soma_meter * 5.5e-3, -2.43
-    #     )  # Input resistance [Ω]
-    #     return R_unit * 1e-6  # Input resistance [MΩ]
+    @property
+    def S_soma(self) -> np.float64:
+        """Soma Surface Area in micro_Meters ^2"""
+        return (
+            self.S_soma_meter * 1e12  # mAtHEmAtiCs need to square the micro also (.-.)
+        )  # Neuron surface area  [μ m^2]
 
     @property
     def Rheobase_threshold(self) -> np.float64:
@@ -153,24 +146,25 @@ class Neuron:
         self, Iinj_it
     ):  # Used by Model2 (all versions) and LIF_model3_v2.py
         """
-        Calculates a linearly distributed reset voltage based on the injected current.
+        Calculates a inverse exponential reset voltage based on the injected current.
         If the current difference is greater than 5 nA, V_reset is fixed at V_reset_mV.
-        #TODO : How far is the increased excitability distributed?
+        #TODO : Can we have different MAX_RHEO_DIFF and DECAY_RHEO_DIFF for the neurons, maybe clustering.
         """
-        delta_I = abs(self.I_rheobase - Iinj_it)  # Absolute current difference
-        max_rheobase_diff = 5  # 5 nA
+        delta_I = abs(Iinj_it - self.I_rheobase)  # Absolute current difference
+        # Optional:get for specfic neuron/cluster? max_rheobase_diff = MAX_RHEO_DIFF  # 5 nA
 
-        if delta_I >= max_rheobase_diff:
-            return (
-                self.V_reset_mV
-            )  # If difference exceeds 5 nA, set fixed reset voltage
+        if delta_I >= MAX_RHEO_DIFF:
+            return self.V_reset_mV
 
         # Linear interpolation between V_th_mV and V_reset_mV
-        V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
-            self.V_th_mV - self.V_reset_mV
-        )
-        # print(f"Reset: {V_reset:.2f} mV")
-        return V_reset
+        # V_reset = self.V_reset_mV + (1 - delta_I / max_rheobase_diff) * (
+        #     self.V_th_mV - self.V_reset_mV
+        # )
+        V_reset = (self.V_th_mV + 1.5) - np.exp(DECAY_RHEO_DIFF * delta_I)
+        # 1.5 was manually tuned to push only the closest neurons eacross the threshold
+
+        # check that we dont lower reset too much due to decay.
+        return np.max([V_reset, self.V_reset_mV])
 
     #### -------- MODEL 3 method below!! -------
     def calculate_v_reset_MODEL3(
@@ -181,13 +175,15 @@ class Neuron:
         Simulates decreased excitability following a doublet spike.
         """
         delta_I = abs(self.I_rheobase - Iinj_it)
-        max_rheobase_diff = 5  # nA
 
-        if delta_I >= max_rheobase_diff:
+        if delta_I >= MAX_RHEO_DIFF:
             V_reset = self.V_reset_mV
         else:
-            V_reset = self.V_reset_mV + (delta_I / max_rheobase_diff) * (
-                self.V_th_mV - self.V_reset_mV
+            V_reset = np.max(
+                [
+                    (self.V_th_mV + 1.5) - np.exp(DECAY_RHEO_DIFF * delta_I),
+                    self.V_reset_mV,
+                ]
             )
 
         V_reset -= inhib_level * 5  # up to 5 mV additional hyperpolarization
@@ -214,7 +210,9 @@ class NeuronFactory:
         return Neuron(
             distribution=distribution,
             number=number,
-            doublet_rheobase_coefficient=np.linspace(3.4, 2.1, num_total_neurons)[
+            doublet_rheobase_coefficient=np.linspace(
+                3.4 / 2, 2.1 / 2, num_total_neurons
+            )[
                 number
             ],  # Rheobase threshold coefficient
             gain_exc=leak_coefficient,
@@ -244,6 +242,30 @@ class NeuronFactory:
                 num_total_neurons=number_of_neurons,
             )
             for i, soma_diameter in enumerate(soma_diameters)
+        ]
+
+        return neuron_list
+
+    @staticmethod
+    def create_neuron_subpool(
+        indexes_to_make: np.array,
+        distribution: bool,
+        number_of_neurons: np.float64 = 300,
+    ) -> List[Neuron]:
+        """Creates selected neurons from a pool with a total number of neurons"""
+
+        soma_diameters = soma_diameter_vector(total_neurons=number_of_neurons)
+
+        soma_subset = soma_diameters[indexes_to_make]
+
+        neuron_list = [
+            NeuronFactory.create_neuron(
+                distribution=distribution,
+                soma_diameter=soma_diameter,
+                number=i,
+                num_total_neurons=number_of_neurons,
+            )
+            for soma_diameter, i in zip(soma_subset, indexes_to_make)
         ]
 
         return neuron_list

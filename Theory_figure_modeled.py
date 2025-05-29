@@ -17,7 +17,7 @@ DT = 0.1  # Time step in [ms]
 def Output_plots(CI: np.array, simulation_data: List[Tuple[Neuron,]]):
     """Produces a membrane potential - Time plot for the given simulation results."""
 
-    time = np.linspace(0, np.shape(CI)[0] * DT, np.shape(CI)[0])
+    time = np.linspace(0, len(CI) * DT, len(CI))
 
     fig, ax = plt.subplots()
     for neuron_data_pair in simulation_data:
@@ -123,10 +123,12 @@ def _main():
         freq,
     )
 
-    input = max_I * np.ones(int(T / DT))
+    input = CI  # max_I * np.ones(int(T / DT))
     # Create neurons with NEURONFACTORY class (# Generate list of new neurons)
 
-    all_neurons = NeuronFactory.create_neuron_pool(number_of_neurons=neuron_pool_size)
+    all_neurons = NeuronFactory.create_neuron_pool(
+        True, number_of_neurons=neuron_pool_size
+    )
     neuron_indexes = [50, 100, 250]  # Neurons to be modelled & plotted.
     neuron_indexes = [
         5,
